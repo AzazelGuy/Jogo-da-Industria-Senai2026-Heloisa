@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fluxograma de Montagem & Regras de Código - Serious Game Hardware</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+    .mermaid-container { background: #1e293b; border-radius: 0.75rem; padding: 1.5rem; overflow-x: auto; }
+    .mermaid svg { max-width: 100% !important; height: auto !important; margin: 0 auto; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-50 shadow-md">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="p-2.5 bg-blue-600 rounded-xl text-white shadow-lg shadow-blue-500/30">
+          <i class="fa-solid fa-sitemap text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-white tracking-wide">Fluxograma de Montagem & Regras de Código</h1>
+          <p class="text-xs text-slate-400">Serious Game: Diagnóstico e Montagem de Computadores 3D</p>
+        </div>
+      </div>
+      <div class="flex gap-2 w-full sm:w-auto">
+        <button id="btn-copy-mermaid" class="flex-1 sm:flex-none px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition border border-slate-700 flex items-center justify-center gap-2">
+          <i class="fa-solid fa-copy"></i> Copiar Código Mermaid
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Navigation Tabs / Controls (Left Column on LG) -->
+    <div class="lg:col-span-3 space-y-4">
+      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-3">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 px-1">Visualizações de Fluxo</h2>
+        
+        <button onclick="switchTab('montagem')" id="tab-montagem" class="w-full text-left px-3.5 py-3 rounded-lg text-sm font-medium transition flex items-center gap-3 bg-blue-600 text-white shadow-md">
+          <i class="fa-solid fa-screwdriver-wrench w-5 text-center"></i>
+          <span>1. Sequência de Montagem</span>
+        </button>
+
+        <button onclick="switchTab('codigo')" id="tab-codigo" class="w-full text-left px-3.5 py-3 rounded-lg text-sm font-medium transition flex items-center gap-3 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200">
+          <i class="fa-solid fa-code w-5 text-center"></i>
+          <span>2. Lógica do Código (Unity)</span>
+        </button>
+
+        <button onclick="switchTab('dependencias')" id="tab-dependencias" class="w-full text-left px-3.5 py-3 rounded-lg text-sm font-medium transition flex items-center gap-3 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200">
+          <i class="fa-solid fa-layer-group w-5 text-center"></i>
+          <span>3. Matriz de Dependências</span>
+        </button>
+
+        <button onclick="switchTab('reparo')" id="tab-reparo" class="w-full text-left px-3.5 py-3 rounded-lg text-sm font-medium transition flex items-center gap-3 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200">
+          <i class="fa-solid fa-bug w-5 text-center"></i>
+          <span>4. Modo Reparo / Diagnóstico</span>
+        </button>
+      </div>
+
+      <!-- Quick Summary Card -->
+      <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 space-y-2">
+        <h3 class="text-xs font-semibold text-blue-400 flex items-center gap-2">
+          <i class="fa-solid fa-lightbulb"></i> Regra de Ouro da Mão Invisível
+        </h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Nenhuma peça pode ser instalada se o seu soquete não for compatível ou se a camada inferior (dependência física) estiver ausente. O código cancela a ação e emite um alerta educativo.
+        </p>
+      </div>
+    </div>
+
+    <!-- Diagram Display Area (Right Column on LG) -->
+    <div class="lg:col-span-9 space-y-6">
+
+      <!-- Mermaid View Window -->
+      <div class="bg-slate-900 p-4 sm:p-6 rounded-2xl border border-slate-800 shadow-xl space-y-4">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+          <h2 id="diagram-title" class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-diagram-project text-blue-500"></i> Fluxo de Montagem do Computador
+          </h2>
+          <span class="text-xs bg-slate-800 text-slate-400 px-2.5 py-1 rounded-full border border-slate-700">Renderização Mermaid.js</span>
+        </div>
+
+        <!-- Render Box -->
+        <div class="mermaid-container flex justify-center min-h-[400px]" id="mermaid-target">
+          <!-- Rendered by Mermaid -->
+        </div>
+      </div>
+
+      <!-- Detail Cards Section -->
+      <div id="details-box" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Dynamic content filled via JS -->
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer class="bg-slate-900 border-t border-slate-800 py-3 text-center text-xs text-slate-500">
+    Serious Game PC Building Simulation &copy; 2026 - Estrutura de Arquitetura e Engenharia de Software
+  </footer>
+
+  <!-- Script Container -->
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'dark',
+      securityLevel: 'loose',
+      flowchart: { curve: 'basis' }
+    });
+
+    const diagrams = {
+      montagem: {
+        title: '1. Fluxograma Sequencial de Montagem de Hardware',
+        mermaid: `
+graph TD
+    Start([Início da Montagem]) --> Step1[1. Posicionar Gabinete na Bancada]
+    Step1 --> Step2[2. Instalar Fonte de Alimentação - PSU]
+    Step2 --> Step3[3. Parafusar Fonte no Gabinete]
+    
+    Step3 --> Step4[4. Posicionar Placa-Mãe na Mesa]
+    Step4 --> Step5[5. Abrir Trava do Soquete CPU]
+    Step5 --> Step6[6. Encaixar Processador - Verificar Alinhamento]
+    Step6 --> Step7[7. Travar Alavanca do Soquete]
+    Step7 --> Step8[8. Aplicar Pasta Térmica sobre a CPU]
+    Step8 --> Step9[9. Instalar Cooler do Processador]
+    Step9 --> Step10[10. Conectar Cabo do Cooler na Porta CPU_FAN]
+    
+    Step10 --> Step11[11. Abrir Travas dos Slots RAM]
+    Step11 --> Step12[12. Encaixar Pentes de Memória RAM]
+    
+    Step12 --> Step13[13. Fixar Placa-Mãe no Gabinete com Parafusos]
+    Step13 --> Step14[14. Instalar Armazenamento - SSD / HD]
+    Step14 --> Step15[15. Encaixar Placa de Vídeo no Slot PCIe]
+    Step15 --> Step16[16. Parafusar Placa de Vídeo no Espelho do Gabinete]
+    
+    Step16 --> Step17[17. Conectar Cabos de Energia - ATX 24p, CPU 8p, PCIe]
+    Step17 --> Step18[18. Conectar Cabos de Dados SATA / Painel Frontal]
+    Step18 --> Step19[19. Fechar Tampa Lateral do Gabinete]
+    Step19 --> Step20[20. Conectar Cabos Externos - Monitor, Energia, Periféricos]
+    Step20 --> End([Pressionar Botão POWER - Teste de BOOT])
+        `,
+        cards: [
+          { title: "Etapa Crítica: CPU & Pasta Térmica", desc: "Se o jogador esquecer de aplicar a pasta térmica ou não travar o soquete, o computador ligará mas desligará por superaquecimento após 10 segundos no simulador." },
+          { title: "Ordem da Placa-Mãe", desc: "É pedagogicamente mais simples montar a CPU, Pasta Térmica, Cooler e Memória RAM na Placa-Mãe *fora* do gabinete, e depois parafusá-la inteira no chassi." }
+        ]
+      },
+      codigo: {
+        title: '2. Lógica de Execução dos Scripts (Unity C#)',
+        mermaid: `
+graph TD
+    A[Jogador Clica na Peça] --> B{Possui Peça na Mão?}
+    B -- Não --> C[Executar Raycast 3D]
+    C --> D{Atingiu Peça?}
+    D -- Sim --> E[Chamar PickUpItem no ComponentBase]
+    
+    B -- Sim --> F[Mover Peça Acompanhando Cursor]
+    F --> G[Verificar Slot sob o Cursor]
+    G --> H{Slot Encontrado?}
+    
+    H -- Sim --> I[Consultar ScriptableObject PieceData]
+    I --> J{Soquete & Tipo Compatíveis?}
+    J -- Não --> K[Exibir Borda Vermelha / Erro Educativo]
+    
+    J -- Sim --> L{Dependências Físicas Concluídas?}
+    L -- Não --> M[Exibir Alerta: Peça Bloqueada por Pré-requisito]
+    
+    L -- Sim --> N[Exibir Borda Verde / Permitir Encaixe]
+    N --> O[Ao Soltar: Chamar MountComponent]
+    O --> P[Transicionar Câmera para Minigame de Fixação]
+    P --> Q[Atualizar Estado no StepChecker]
+        `,
+        cards: [
+          { title: "ComponentBase.cs", desc: "Classe pai herdada por todos os scripts de peças. Trata a lógica de seletores Raycast, colisão, destaque visual de slots e validação de ScriptableObject." },
+          { title: "StepChecker.cs", desc: "Gerenciador central de progresso. Mantém um dicionário de booleanos com o status de cada dependência do computador." }
+        ]
+      },
+      dependencias: {
+        title: '3. Grafo de Dependências de Montagem (Pré-requisitos)',
+        mermaid: `
+graph LR
+    CPU[Processador] -->|Requer| Socket[Soquete Placa-Mãe Liberto]
+    ThermalPaste[Pasta Térmica] -->|Requer| CPU
+    Cooler[Cooler da CPU] -->|Requer| ThermalPaste
+    CPU_FAN[Cabo CPU_FAN] -->|Requer| Cooler
+    
+    RAM[Memória RAM] -->|Requer| SlotRAM[Slot RAM Aberto]
+    
+    MotherboardInCase[Placa-Mãe no Gabinete] -->|Requer| Cooler
+    MotherboardInCase -->|Requer| RAM
+    
+    GPU[Placa de Vídeo] -->|Requer| MotherboardInCase
+    GPU_Screw[Parafuso da GPU] -->|Requer| GPU
+    
+    ATX_24P[Cabo ATX 24p] -->|Requer| MotherboardInCase
+    ATX_24P -->|Requer| PSU[Fonte Instalada]
+        `,
+        cards: [
+          { title: "Barreira de Proteção", desc: "O sistema de dependência impede que o jogador 'parafuse o ar' ou coloque o cooler sem antes aplicar a pasta térmica no processador." },
+          { title: "Verificação em Camadas", desc: "Para desencaixar uma peça, a lógica roda ao contrário: primeiro remove-se os parafusos/cabos para depois soltar o componente principal." }
+        ]
+      },
+      reparo: {
+        title: '4. Fluxo de Diagnóstico e Modo Reparo',
+        mermaid: `
+graph TD
+    StartReparo([Receber Ordem de Serviço]) --> ReadTicket[Ler Descrição dos Sintomas do Cliente]
+    ReadTicket --> TryPower[Tentar Ligar o PC na Bancada]
+    
+    TryPower --> CheckBoot{O PC Liga?}
+    
+    CheckBoot -- Não Liga / Sem Sinal --> TestPSU[Testar Fonte com Multímetro]
+    TestPSU --> PSUResult{Tensão Correta?}
+    PSUResult -- Defeituosa --> SwapPSU[Substituir Fonte de Alimentação]
+    
+    CheckBoot -- Bipa mas não Dá Vídeo --> CheckPOST[Ouvir Código de Bip do Speaker]
+    CheckPOST --> POSTDiag{Tipo de Bip?}
+    POSTDiag -- 3 Bips Longos --> TestRAM[Inspecionar / Testar Pentes de RAM]
+    POSTDiag -- 1 Bip Longo 2 Curtos --> TestGPU[Inspecionar Placa de Vídeo]
+    
+    CheckBoot -- Liga e Desliga em Segundos --> CheckTemp[Verificar Temperatura / Cooler / Pasta]
+    
+    SwapPSU --> FinalTest[Executar Validador de BOOT]
+    TestRAM --> SwapRAM[Substituir RAM Avariada] --> FinalTest
+    TestGPU --> SwapGPU[Substituir GPU Avariada] --> FinalTest
+    CheckTemp --> ApplyThermal[Aplicar Pasta Térmica / Trocar Cooler] --> FinalTest
+    
+    FinalTest --> Report[Concluir Chamado e Gerar Relatório de Aprendizado]
+        `,
+        cards: [
+          { title: "Códigos POST (Speaker)", desc: "Ensina o jogador a interpretar os sons da placa-mãe (ex: 3 bips = erro de memória) antes mesmo de abrir o gabinete." },
+          { title: "TroubleGenerator.cs", desc: "Script responsável por instanciar a máquina sorteando um componente com saúde zerada e associando o sintoma correto ao chamado." }
+        ]
+      }
+    };
+
+    function renderDiagram(key) {
+      const target = document.getElementById('mermaid-target');
+      const data = diagrams[key];
+      
+      document.getElementById('diagram-title').innerHTML = `<i class="fa-solid fa-diagram-project text-blue-500"></i> ${data.title}`;
+      
+      // Update Mermaid Content
+      target.removeAttribute('data-processed');
+      target.innerHTML = `<pre class="mermaid">${data.mermaid}</pre>`;
+      
+      mermaid.contentLoaded();
+
+      // Update Card Details
+      const detailsBox = document.getElementById('details-box');
+      detailsBox.innerHTML = data.cards.map(c => `
+        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-1">
+          <h4 class="text-sm font-bold text-blue-400 flex items-center gap-2">
+            <i class="fa-solid fa-circle-info text-xs"></i> ${c.title}
+          </h4>
+          <p class="text-xs text-slate-400 leading-relaxed">${c.desc}</p>
+        </div>
+      `).join('');
+    }
+
+    function switchTab(tabKey) {
+      const tabs = ['montagem', 'codigo', 'dependencias', 'reparo'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        if (t === tabKey) {
+          btn.className = "w-full text-left px-3.5 py-3 rounded-lg text-sm font-medium transition flex items-center gap-3 bg-blue-600 text-white shadow-md";
+        } else {
+          btn.className = "w-full text-left px-3.5 py-3 rounded-lg text-sm font-medium transition flex items-center gap-3 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200";
+        }
+      });
+
+      renderDiagram(tabKey);
+    }
+
+    // Copy Mermaid code button
+    let currentKey = 'montagem';
+    document.getElementById('btn-copy-mermaid').addEventListener('click', () => {
+      const code = diagrams[currentKey].mermaid;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('btn-copy-mermaid');
+        btn.innerHTML = `<i class="fa-solid fa-check text-green-400"></i> Copiado!`;
+        setTimeout(() => {
+          btn.innerHTML = `<i class="fa-solid fa-copy"></i> Copiar Código Mermaid`;
+        }, 2000);
+      });
+    });
+
+    // Initial render
+    window.onload = function() {
+      renderDiagram('montagem');
+    };
+  </script>
+</body>
+</html>
