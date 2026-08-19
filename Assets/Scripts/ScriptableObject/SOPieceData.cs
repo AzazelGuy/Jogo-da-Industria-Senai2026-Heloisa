@@ -10,19 +10,21 @@ public enum Tipo
     Armazenamento, //Conectores Sata ou NVME
     Gabinete,
     Fonte,
-    Ram, //DDR 3-5
-    PlacaRede
+    Ram,
+    PlacaRede,
+    Cabo
 }
 
 public enum Encaixe
 {
-    DDR3, DDR4, DDR5,
-    Sata, NVME, CPUSocket, NenhumEspecificado, ConectorEnergia, ConectorEnergiaCPU
+    SlotRam, CaboEnergia, CaboEnergiaCpu, EntradaSata, EntradaSataNvme, Nenhum, CPUSockete, SlotGPU, Cooler, Parafuso
 }
-
 public enum Cabos
 {
-    Sata, ConectorEnergia, ConectorEnergiaCPU
+    Sata, 
+    ConectorEnergia, 
+    ConectorEnergiaCPU, 
+    ConectorPower //Sim o botão power do PC
 }
 
 [CreateAssetMenu(fileName = "Peça", menuName = "Peças/ Nova Peça")]
@@ -42,5 +44,5 @@ public class SOPieceData : ScriptableObject
     public List<Mesh> modelos;
     public List<Material> materiais;
 
-    public GameObject prefab;
+    public List<GameObject> prefab;
 }

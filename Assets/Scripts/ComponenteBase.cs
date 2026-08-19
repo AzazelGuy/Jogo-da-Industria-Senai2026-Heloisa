@@ -1,4 +1,5 @@
 using UnityEngine;
+using SeriousGame.Hardware;
 
 // A interface ISelectable permite que o GameManager ou o sistema de cliques interaja com este objeto
 public class ComponenteBase : MonoBehaviour, ISelectable
@@ -7,8 +8,8 @@ public class ComponenteBase : MonoBehaviour, ISelectable
     [Tooltip("Animador opcional para tocar animações ao selecionar/deselecionar.")]
     [SerializeField] private Animator anim;
 
-    [Tooltip("ID único desta peça (ex: 'RAM_Slot_1', 'GPU'). Deve ser idêntico ao ID do slot de destino.")]
-    [SerializeField] private string expectedID;
+    [Tooltip("Informação da Peça")]
+    [SerializeField] private SOPieceData InfoPeca;
 
     [Tooltip("Estado atual da peça (Normal = na bancada / Selected = sendo arrastada).")]
     [SerializeField] private State cur_state;
@@ -19,6 +20,13 @@ public class ComponenteBase : MonoBehaviour, ISelectable
     [Header("Configurações de Snapping (Encaixe Magnético)")]
     [Tooltip("Distância máxima entre a peça e o slot para ela 'grudar' no lugar.")]
     [SerializeField] private float snapDistance = 1.0f;
+
+    [Header("Configurações de Arraste em 3D")]
+    [Tooltip("LayerMask de superfícies/bancada para evitar que a peça atravesse o chão.")]
+    [SerializeField] private LayerMask surfaceLayerMask = ~0;
+
+    [Tooltip("Elevação suave em Y ao arrastar para não colidir com a bancada.")]
+    [SerializeField] private float dragHeightOffset = 0.05f;
 
     [Header("Configurações do Outline (Material)")]
     [Tooltip("Arraste aqui o Material 'M_Outline' que usa o Custom/OutlineShader.")]
@@ -31,6 +39,10 @@ public class ComponenteBase : MonoBehaviour, ISelectable
     private bool isSnapped = false;          // True quando a peça está grudada no slot
     private bool isPlaced = false;           // True quando a peça é instalada definitivamente
     private bool justSelected = false;       // Trava para evitar soltar a peça no mesmo frame do clique
+
+    // Controle de Arraste 3D
+    private float dragDepth;                 // Distância da peça até a câmera no momento da seleção
+    private Plane dragPlane;                 // Plano 3D dinâmico relativo à câmera
 
     // Controle de Materiais para o efeito de Outline
     private Renderer meshRenderer;
@@ -62,7 +74,7 @@ public class ComponenteBase : MonoBehaviour, ISelectable
         IdentifiyerEncaixe[] slots = FindObjectsByType<IdentifiyerEncaixe>(FindObjectsSortMode.None);
         foreach (IdentifiyerEncaixe slot in slots)
         {
-            if (slot.getID == expectedID)
+            if (slot.getID == InfoPeca.ID)
             {
                 targetSlot = slot;
                 break;
@@ -91,19 +103,74 @@ public class ComponenteBase : MonoBehaviour, ISelectable
         }
     }
 
+    public void OnSelect()
+    {
+        SelectPeca();
+    }
+
+    protected virtual void SelectPeca()
+    {
+        if (isPlaced || cur_state == State.Selected) return;
+
+        cur_state = State.Selected;
+        justSelected = true;
+
+        if (mainCamera == null) mainCamera = Camera.main;
+
+        // Calcula a profundidade inicial da peça em relação à câmera atual
+        dragDepth = mainCamera.WorldToScreenPoint(transform.position).z;
+
+        if (anim != null) anim.SetTrigger("OnSelect");
+
+        SetOutlineVisible(true);
+
+        GameManager.Instance.SelectObject(gameObject);
+
+        if (targetSlot != null && myModel != null)
+        {
+            targetSlot.UpdateModel(myModel.mesh);
+        }
+    }
+
     private void HandleDraggingAndSnapping()
     {
-        Vector3 mouseScreenPos = Input.mousePosition;
-        mouseScreenPos.z = mainCamera.WorldToScreenPoint(originalPosition).z;
+        if (mainCamera == null) mainCamera = Camera.main;
 
-        Vector3 targetWorldPos = mainCamera.ScreenToWorldPoint(mouseScreenPos);
-        targetWorldPos.z = originalPosition.z;
+        // 1. Lança um raio a partir da posição do mouse na tela
+        Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
 
+        // 2. Cria um plano 3D dinâmico alinhado com a visão da câmera na profundidade da peça
+        dragPlane = new Plane(-mainCamera.transform.forward, transform.position);
+
+        Vector3 targetWorldPos;
+
+        if (dragPlane.Raycast(ray, out float enter))
+        {
+            targetWorldPos = ray.GetPoint(enter);
+        }
+        else
+        {
+            // Fallback usando a profundidade salva
+            Vector3 mouseScreenPos = Input.mousePosition;
+            mouseScreenPos.z = dragDepth;
+            targetWorldPos = mainCamera.ScreenToWorldPoint(mouseScreenPos);
+        }
+
+        // 3. Impede que a peça atravesse superfícies ou a bancada
+        /*if (Physics.Raycast(targetWorldPos + Vector3.up * 0.5f, Vector3.down, out RaycastHit hit, 1.5f, surfaceLayerMask))
+        {
+            float minY = hit.point.y + dragHeightOffset;
+            if (targetWorldPos.y < minY)
+            {
+                targetWorldPos.y = minY;
+            }
+        }*/
+        targetWorldPos.y = transform.position.y;
+
+        // 4. Snapping magnético em 3D com o slot correto
         if (targetSlot != null)
         {
             Vector3 slotPos = targetSlot.transform.position;
-            slotPos.z = originalPosition.z;
-
             float distance = Vector3.Distance(targetWorldPos, slotPos);
 
             if (distance <= snapDistance)
@@ -118,29 +185,11 @@ public class ComponenteBase : MonoBehaviour, ISelectable
         isSnapped = false;
     }
 
-    public void OnSelect()
-    {
-        if (isPlaced || cur_state == State.Selected) return;
-
-        cur_state = State.Selected;
-        justSelected = true;
-
-        if (anim != null) anim.SetTrigger("OnSelect");
-
-        SetOutlineVisible(true);
-
-        GameManager.Instance.SelectObject(gameObject);
-
-        if (targetSlot != null && myModel != null)
-        {
-            targetSlot.UpdateModel(myModel.mesh);
-        }
-    }
-
     private void DropObject()
     {
         if (isSnapped && targetSlot != null)
         {
+            // 1. Fixa a peça na posição do slot
             transform.position = targetSlot.transform.position;
             cur_state = State.Normal;
             isPlaced = true;
@@ -157,6 +206,9 @@ public class ComponenteBase : MonoBehaviour, ISelectable
             {
                 col.enabled = false;
             }
+
+            // 2. Dispara a aproximação suave de Câmera (CameraController)
+            TriggerCameraZoom();
         }
         else
         {
@@ -164,7 +216,43 @@ public class ComponenteBase : MonoBehaviour, ISelectable
         }
     }
 
-    public void OnDeselect()
+    /// <summary>
+    /// Localiza o Ponto de Foco (FocusPoint) e comanda a Câmera a aproximar
+    /// </summary>
+    private void TriggerCameraZoom()
+    {
+        // Busca o FocusPoint na PEÇA ou em seus filhos
+        FocusPoint targetFocus = GetComponentInChildren<FocusPoint>();
+
+        // Se não houver na peça, busca no SLOT
+        if (targetFocus == null && targetSlot != null)
+        {
+            targetFocus = targetSlot.GetComponentInChildren<FocusPoint>();
+            if (targetSlot.GetComponentInParent<IdentifiyerEncaixe>().hasScrew)
+            {
+                targetSlot.GetComponentInParent<EncaixeBase>().MiniGameScrew();
+            }
+        }
+
+        // Executa o Zoom se o controlador e o ponto existirem
+        if (CameraController.instance != null)
+        {
+            if (targetFocus != null)
+            {
+                CameraController.instance.FocusOnPiece(targetFocus);
+            }
+            else
+            {
+                Debug.LogWarning($"[ComponenteBase] Peça '{gameObject.name}' foi encaixada, mas nenhum 'FocusPoint' foi encontrado nela ou no slot!");
+            }
+        }
+        else
+        {
+            Debug.LogError("[ComponenteBase] CameraController não foi encontrado na cena! Verifique se ele está na Main Camera.");
+        }
+    }
+
+    protected virtual void Deselect()
     {
         if (isPlaced) return;
 
@@ -182,6 +270,11 @@ public class ComponenteBase : MonoBehaviour, ISelectable
         }
 
         GameManager.Instance.ClearObject();
+    }
+
+    public void OnDeselect()
+    {
+        Deselect();
     }
 
     #region Sistema de Aplicação do Material de Outline
@@ -221,5 +314,6 @@ public class ComponenteBase : MonoBehaviour, ISelectable
 
     #endregion
 
-    public string myID => expectedID;
+    public string myID => InfoPeca != null ? InfoPeca.ID : "";
+
 }
