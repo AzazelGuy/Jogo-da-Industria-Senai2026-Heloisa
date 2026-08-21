@@ -2,156 +2,157 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-namespace SeriousGame.Hardware
-{
     /// <summary>
-    /// Estado atual da câmera de montagem.
+    /// Estados possíveis para o movimento da câmera.
     /// </summary>
     public enum CameraState
     {
         Overview,   // Visão geral da bancada
         Moving,     // Em transição suave
-        Focused     // Focada em uma peça/parafuso específico
+        Focused     // Focada em uma peça/parafuso
     }
 
     /// <summary>
-    /// Gerenciador principal do movimento e zoom da câmera.
-    /// Anexe este script EXCLUSIVAMENTE na sua Main Camera.
-    /// Crie um arquivo chamado "FocusCameraController.cs".
+    /// Gerenciador do movimento, rotação e aproximação (zoom) da câmera principal.
     /// </summary>
     [RequireComponent(typeof(Camera))]
     public class CameraController : MonoBehaviour
     {
-
         public static CameraController instance;
+
         [Header("Configurações de Movimento")]
-        [SerializeField, Tooltip("Duração da transição em segundos.")]
-        private float transitionDuration = 0.8f;
+        [SerializeField, Tooltip("Duração da transição da câmera em segundos.")]
+        private float duracaoDaTransicao = 0.8f;
 
-        [SerializeField, Tooltip("Curva de suavização da animação (Ease In Out recomendado).")]
-        private AnimationCurve transitionCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+        [SerializeField, Tooltip("Curva de suavização da animação da câmera.")]
+        private AnimationCurve curvaDeTransicao = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
-        // Referências internas de estado
-        private Camera targetCamera;
-        private CameraState currentState = CameraState.Overview;
+        // Referências e Estados Internos
+        private Camera cameraAlvo;
+        private CameraState estadoAtual = CameraState.Overview;
 
-        // Dados da Posição Inicial (Bancada)
-        private Vector3 initialPosition;
-        private Quaternion initialRotation;
-        private float initialFOV;
+        // Transformações Iniciais (Bancada)
+        private Vector3 posicaoInicial;
+        private Quaternion rotacaoInicial;
+        private float fovInicial;
 
-        // Controle de Corrotina ativa
-        private Coroutine activeTransitionRoutine;
+        // Controle de Corrotina
+        private Coroutine rotinaDeTransicaoAtiva;
 
-        // Eventos C# para notificar outros sistemas
+        // Eventos C#
         public event Action OnFocusReached;
         public event Action OnReturnToOverview;
 
-        public CameraState CurrentState => currentState;
+        public CameraState CurrentState => estadoAtual;
 
         private void Awake()
         {
-            if (instance == null) { instance = this; } else { Destroy(gameObject); }
-                targetCamera = GetComponent<Camera>();
+            if (instance == null)
+            {
+                instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            cameraAlvo = GetComponent<Camera>();
             SaveInitialTransform();
         }
 
         /// <summary>
-        /// Grava a posição, rotação e FOV atuais como o estado inicial (Overview).
+        /// Salva a posição, rotação e campo de visão (FOV) atuais como o ponto inicial.
         /// </summary>
         public void SaveInitialTransform()
         {
-            initialPosition = transform.position;
-            initialRotation = transform.rotation;
-            initialFOV = targetCamera.fieldOfView;
-            currentState = CameraState.Overview;
+            posicaoInicial = transform.position;
+            rotacaoInicial = transform.rotation;
+            fovInicial = cameraAlvo.fieldOfView;
+            estadoAtual = CameraState.Overview;
         }
 
         /// <summary>
-        /// Move a câmera suavemente para o ponto de foco de uma peça/parafuso.
+        /// Move a câmera suavemente para o ponto de foco informado.
         /// </summary>
-        public void FocusOnPiece(FocusPoint focusPoint)
+        public void FocusOnPiece(FocusPoint pontoDeFoco)
         {
-            if (focusPoint == null) return;
+            if (pontoDeFoco == null) return;
 
-            Vector3 targetPos = focusPoint.GetWorldTargetPosition();
-            Quaternion targetRot = focusPoint.GetWorldTargetRotation();
-            float targetFOV = focusPoint.focusedFOV;
+            Vector3 posicaoAlvo = pontoDeFoco.GetWorldTargetPosition();
+            Quaternion rotacaoAlvo = pontoDeFoco.GetWorldTargetRotation();
+            float fovAlvo = pontoDeFoco.focusedFOV;
 
-            StartTransition(targetPos, targetRot, targetFOV, () =>
+            IniciarTransicao(posicaoAlvo, rotacaoAlvo, fovAlvo, () =>
             {
-                currentState = CameraState.Focused;
+                estadoAtual = CameraState.Focused;
                 OnFocusReached?.Invoke();
             });
         }
 
         /// <summary>
-        /// Move a câmera de volta para a visão geral da bancada.
+        /// Retorna a câmera para a visão geral da bancada.
         /// </summary>
         public void ReturnToOverview()
         {
-            if (currentState == CameraState.Overview) return;
+            if (estadoAtual == CameraState.Overview) return;
 
-            StartTransition(initialPosition, initialRotation, initialFOV, () =>
+            IniciarTransicao(posicaoInicial, rotacaoInicial, fovInicial, () =>
             {
-                currentState = CameraState.Overview;
+                estadoAtual = CameraState.Overview;
                 OnReturnToOverview?.Invoke();
             });
         }
 
-        private void StartTransition(Vector3 targetPos, Quaternion targetRot, float targetFOV, Action onComplete)
+        private void IniciarTransicao(Vector3 posicaoAlvo, Quaternion rotacaoAlvo, float fovAlvo, Action aoConcluir)
         {
-            if (activeTransitionRoutine != null)
+            if (rotinaDeTransicaoAtiva != null)
             {
-                StopCoroutine(activeTransitionRoutine);
+                StopCoroutine(rotinaDeTransicaoAtiva);
             }
 
-            currentState = CameraState.Moving;
-            activeTransitionRoutine = StartCoroutine(TransitionRoutine(targetPos, targetRot, targetFOV, onComplete));
+            estadoAtual = CameraState.Moving;
+            rotinaDeTransicaoAtiva = StartCoroutine(RotinaDeTransicao(posicaoAlvo, rotacaoAlvo, fovAlvo, aoConcluir));
         }
 
-        /// <summary>
-        /// Corrotina de interpolação suave (Lerp/Slerp) de Posição, Rotação e FOV.
-        /// </summary>
-        private IEnumerator TransitionRoutine(Vector3 targetPos, Quaternion targetRot, float targetFOV, Action onComplete)
+        private IEnumerator RotinaDeTransicao(Vector3 posicaoAlvo, Quaternion rotacaoAlvo, float fovAlvo, Action aoConcluir)
         {
-            Vector3 startPos = transform.position;
-            Quaternion startRot = transform.rotation;
-            float startFOV = targetCamera.fieldOfView;
+            Vector3 posicaoInicio = transform.position;
+            Quaternion rotacaoInicio = transform.rotation;
+            float fovInicio = cameraAlvo.fieldOfView;
 
-            float elapsedTime = 0f;
+            float tempoDecorrido = 0f;
 
-            while (elapsedTime < transitionDuration)
+            while (tempoDecorrido < duracaoDaTransicao)
             {
-                elapsedTime += Time.deltaTime;
-                float normalizedTime = Mathf.Clamp01(elapsedTime / transitionDuration);
-                float curveValue = transitionCurve.Evaluate(normalizedTime);
+                tempoDecorrido += Time.deltaTime;
+                float tempoNormalizado = Mathf.Clamp01(tempoDecorrido / duracaoDaTransicao);
+                float valorDaCurva = curvaDeTransicao.Evaluate(tempoNormalizado);
 
-                transform.position = Vector3.Lerp(startPos, targetPos, curveValue);
-                transform.rotation = Quaternion.Slerp(startRot, targetRot, curveValue);
-                targetCamera.fieldOfView = Mathf.Lerp(startFOV, targetFOV, curveValue);
+                transform.position = Vector3.Lerp(posicaoInicio, posicaoAlvo, valorDaCurva);
+                transform.rotation = Quaternion.Slerp(rotacaoInicio, rotacaoAlvo, valorDaCurva);
+                cameraAlvo.fieldOfView = Mathf.Lerp(fovInicio, fovAlvo, valorDaCurva);
 
                 yield return null;
             }
 
-            transform.position = targetPos;
-            transform.rotation = targetRot;
-            targetCamera.fieldOfView = targetFOV;
+            transform.position = posicaoAlvo;
+            transform.rotation = rotacaoAlvo;
+            cameraAlvo.fieldOfView = fovAlvo;
 
-            activeTransitionRoutine = null;
-            onComplete?.Invoke();
+            rotinaDeTransicaoAtiva = null;
+            aoConcluir?.Invoke();
         }
 
         private void Update()
         {
-            // Atalho: Tecla ESC ou Botão Direito do Mouse desfaz o zoom
+            // Atalho para cancelar o zoom: Tecla ESC ou Botão Direito do Mouse
             if (Input.GetKeyDown(KeyCode.Escape) || Input.GetMouseButtonDown(1))
             {
-                if (currentState == CameraState.Focused)
+                if (estadoAtual == CameraState.Focused)
                 {
                     ReturnToOverview();
                 }
             }
         }
     }
-}

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Database de Peças", menuName = "Peças/ Novo Banco de Peças")]
+//Resumo: Códgio que armazena informações das peças do jogo
 public class PieceDataBase : ScriptableObject
 {
     [Header("Todas as peças registradas no jogo")]
@@ -15,7 +16,7 @@ public class PieceDataBase : ScriptableObject
         InitializeLookup();
     }
 
-    private void InitializeLookup()
+    private void InitializeLookup() //Script responsavel por pesquisa de peças, aqui é inicializado para conferir se todas as peças tem as informações MINIMAMENTE necessárias
     {
         pecaLookUp = new Dictionary<string, SOPieceData>();
 
@@ -35,7 +36,7 @@ public class PieceDataBase : ScriptableObject
             }
             else
             {
-                Debug.LogError($"[UpgradeDatabase] Duplicate upgrade ID found: '{pecas.ID}'!");
+                Debug.LogError($"[Database de Peças] Peça com ID dupllicado: '{pecas.ID}'!");
             }
         }
     }
@@ -43,7 +44,7 @@ public class PieceDataBase : ScriptableObject
     /// <summary>
     /// Converte um ID salvo em um asset 
     /// </summary>
-    public SOPieceData GetPieceByID(string ID)
+    public SOPieceData GetPieceByID(string ID) //Commando para procurar uma peça pelo seu ID, util para pegar info de peça
     {
         if (pecaLookUp == null || pecaLookUp.Count != todasPecas.Count)
         {
@@ -59,6 +60,6 @@ public class PieceDataBase : ScriptableObject
         return null;
     }
 
-    public List<SOPieceData> GettodasPecas() => todasPecas;
+    public List<SOPieceData> GettodasPecas() => todasPecas; //Lista todas as peças
 
 }

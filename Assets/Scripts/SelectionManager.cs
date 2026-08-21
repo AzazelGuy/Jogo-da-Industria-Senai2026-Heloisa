@@ -1,23 +1,34 @@
 using UnityEngine;
 
+/// <summary>
+/// Gerencia as interações de seleção, duplo clique e clique contínuo (hold) via Raycast.
+/// </summary>
 public class SelectionManager : MonoBehaviour
 {
     public static SelectionManager Instance { get; private set; }
 
-    [Header("Raycast Settings")]
-    [SerializeField] private LayerMask selectableLayer;
-    [SerializeField] private float maxDistance = 100f;
+    [Header("Configurações do Raio (Raycast)")]
+    [SerializeField, Tooltip("Camada contendo os objetos que podem ser selecionados.")]
+    private LayerMask camadaSelecionavel;
 
-    [Header("Interaction Timings")]
-    [SerializeField] private float doubleClickThreshold = 0.3f;
-    [SerializeField] private float holdThreshold = 0.5f;
+    [SerializeField, Tooltip("Distância máxima de alcance do raio de seleção.")]
+    private float distanciaMaxima = 100f;
 
-    private Camera cachedCamera;
-    private ISelectable currentSelected;
+    [Header("Tempo de Interação")]
+    [SerializeField, Tooltip("Intervalo máximo de tempo entre cliques para registrar um duplo clique.")]
+    private float limiteDuploClique = 0.3f;
 
-    private float pointerDownTime;
-    private float lastClickTime;
-    private bool isHolding;
+    [SerializeField, Tooltip("Tempo necessário pressionando o botão para registrar como clique contínuo (hold).")]
+    private float limiteCliqueContinuo = 0.5f;
+
+    // Referências e Estados Internos
+    private Camera cameraPrincipal;
+    private ISelectable objetoSelecionadoAtual;
+    private ISelectable objetoPressionadoAtual;
+
+    private float tempoDoClique;
+    private float tempoDoUltimoClique;
+    private bool estaPressionando;
 
     private void Awake()
     {
@@ -32,108 +43,117 @@ public class SelectionManager : MonoBehaviour
 
     private void Start()
     {
-        CacheCamera();
+        AtualizarReferenciaDaCamera();
     }
 
     private void Update()
     {
-        HandleInput();
+        ProcessarEntradasDeUsuario();
     }
 
-    private void HandleInput()
+    private void ProcessarEntradasDeUsuario()
     {
+        // 1. Clique inicial do mouse
         if (Input.GetMouseButtonDown(0))
         {
-            pointerDownTime = Time.time;
-            isHolding = false;
+            tempoDoClique = Time.time;
+            estaPressionando = false;
+            objetoPressionadoAtual = ObterSelecionavelSobOCursor();
         }
 
+        // 2. Botão do mouse mantido pressionado
         if (Input.GetMouseButton(0))
         {
-            if (!isHolding && (Time.time - pointerDownTime >= holdThreshold))
+            if (!estaPressionando && (Time.time - tempoDoClique >= limiteCliqueContinuo))
             {
-                isHolding = true;
+                estaPressionando = true;
             }
 
-            if (isHolding)
+            if (estaPressionando && objetoPressionadoAtual != null)
             {
-                ISelectable hitObj = GetSelectableUnderCursor();
-                if (hitObj != null)
-                {
-                    hitObj.OnHold(); // Called every frame while button is held
-                }
+                objetoPressionadoAtual.OnHold();
             }
         }
 
-        // Process release for single click and double click
+        // 3. Botão do mouse solto
         if (Input.GetMouseButtonUp(0))
         {
-            if (!isHolding)
+            if (!estaPressionando && objetoPressionadoAtual != null)
             {
-                ISelectable hitObj = GetSelectableUnderCursor();
+                SelecionarObjeto(objetoPressionadoAtual);
 
-                if (hitObj != null)
+                if (Time.time - tempoDoUltimoClique <= limiteDuploClique)
                 {
-                    SelectObject(hitObj);
-
-                    if (Time.time - lastClickTime <= doubleClickThreshold)
-                    {
-                        hitObj.OnDoubleClick();
-                    }
-
-                    lastClickTime = Time.time;
+                    objetoPressionadoAtual.OnDoubleClick();
                 }
-                else
-                {
-                    DeselectCurrent();
-                }
+
+                tempoDoUltimoClique = Time.time;
             }
+            else if (!estaPressionando)
+            {
+                DeselecionarAtual();
+            }
+
+            estaPressionando = false;
+            objetoPressionadoAtual = null;
         }
     }
 
-    private ISelectable GetSelectableUnderCursor()
+    /// <summary>
+    /// Executa um Raycast para encontrar o objeto interativo mais próximo sob o cursor
+    /// </summary>
+    private ISelectable ObterSelecionavelSobOCursor()
     {
-        if (cachedCamera == null)
+        if (cameraPrincipal == null)
         {
-            CacheCamera();
-            if (cachedCamera == null) return null;
+            AtualizarReferenciaDaCamera();
+            if (cameraPrincipal == null) return null;
         }
 
-        Ray ray = cachedCamera.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit, maxDistance, selectableLayer))
+        Ray raio = cameraPrincipal.ScreenPointToRay(Input.mousePosition);
+        RaycastHit[] colisoes = Physics.RaycastAll(raio, distanciaMaxima, camadaSelecionavel);
+
+        // Ordena as colisões pela distância do objeto em relação à câmera
+        System.Array.Sort(colisoes, (x, y) => x.distance.CompareTo(y.distance));
+
+        foreach (RaycastHit colisao in colisoes)
         {
-            return hit.collider.GetComponentInParent<ISelectable>();
+            ISelectable selecionavel = colisao.collider.GetComponentInParent<ISelectable>();
+            if (selecionavel != null)
+            {
+                return selecionavel;
+            }
         }
 
         return null;
     }
 
-    private void SelectObject(ISelectable selectable)
+    private void SelecionarObjeto(ISelectable selecionavel)
     {
-        if (currentSelected != null && currentSelected != selectable)
+        if (objetoSelecionadoAtual != null && objetoSelecionadoAtual != selecionavel)
         {
-            currentSelected.OnDeselect();
+            objetoSelecionadoAtual.OnDeselect();
         }
 
-        currentSelected = selectable;
-        currentSelected.OnSelect();
+        objetoSelecionadoAtual = selecionavel;
+        objetoSelecionadoAtual.OnSelect();
     }
 
-    private void DeselectCurrent()
+    private void DeselecionarAtual()
     {
-        if (currentSelected != null)
+        if (objetoSelecionadoAtual != null)
         {
-            currentSelected.OnDeselect();
-            currentSelected = null;
+            objetoSelecionadoAtual.OnDeselect();
+            objetoSelecionadoAtual = null;
         }
     }
 
-    private void CacheCamera()
+    private void AtualizarReferenciaDaCamera()
     {
-        cachedCamera = Camera.main;
-        if (cachedCamera == null)
+        cameraPrincipal = Camera.main;
+        if (cameraPrincipal == null)
         {
-            Debug.LogWarning("[SelectionManager] No camera tagged 'MainCamera' found in the scene.");
+            Debug.LogWarning("[SelectionManager] Nenhuma câmera com a tag 'MainCamera' foi encontrada na cena.");
         }
     }
 }

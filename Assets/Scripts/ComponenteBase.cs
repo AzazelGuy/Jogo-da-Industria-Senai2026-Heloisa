@@ -1,82 +1,82 @@
 using UnityEngine;
-using SeriousGame.Hardware;
 
-// A interface ISelectable permite que o GameManager ou o sistema de cliques interaja com este objeto
+/// <summary>
+/// Classe base para componentes de hardware arrastáveis e encaixáveis na cena.
+/// </summary>
 public class ComponenteBase : MonoBehaviour, ISelectable
 {
-    [Header("Configurações Principais")]
-    [Tooltip("Animador opcional para tocar animações ao selecionar/deselecionar.")]
-    [SerializeField] private Animator anim;
-
-    [Tooltip("Informação da Peça")]
-    [SerializeField] private SOPieceData InfoPeca;
-
-    [Tooltip("Estado atual da peça (Normal = na bancada / Selected = sendo arrastada).")]
-    [SerializeField] private State cur_state;
-
-    [Tooltip("O MeshFilter original desta peça.")]
-    [SerializeField] private MeshFilter myModel;
-
-    [Header("Configurações de Snapping (Encaixe Magnético)")]
-    [Tooltip("Distância máxima entre a peça e o slot para ela 'grudar' no lugar.")]
-    [SerializeField] private float snapDistance = 1.0f;
-
-    [Header("Configurações de Arraste em 3D")]
-    [Tooltip("LayerMask de superfícies/bancada para evitar que a peça atravesse o chão.")]
-    [SerializeField] private LayerMask surfaceLayerMask = ~0;
-
-    [Tooltip("Elevação suave em Y ao arrastar para não colidir com a bancada.")]
-    [SerializeField] private float dragHeightOffset = 0.05f;
-
-    [Header("Configurações do Outline (Material)")]
-    [Tooltip("Arraste aqui o Material 'M_Outline' que usa o Custom/OutlineShader.")]
-    [SerializeField] private Material outlineMaterial;
-
-    // --- VARIÁVEIS INTERNAS DE CONTROLE ---
-    private Vector3 originalPosition;        // Guarda a posição original da peça na bancada
-    private Camera mainCamera;               // Referência para a Câmera Principal
-    private IdentifiyerEncaixe targetSlot;   // O slot exato onde esta peça deve ser instalada
-    private bool isSnapped = false;          // True quando a peça está grudada no slot
-    private bool isPlaced = false;           // True quando a peça é instalada definitivamente
-    private bool justSelected = false;       // Trava para evitar soltar a peça no mesmo frame do clique
-
-    // Controle de Arraste 3D
-    private float dragDepth;                 // Distância da peça até a câmera no momento da seleção
-    private Plane dragPlane;                 // Plano 3D dinâmico relativo à câmera
-
-    // Controle de Materiais para o efeito de Outline
-    private Renderer meshRenderer;
-    private Material[] originalMaterials;   // Materiais originais da peça
-    private Material[] outlinedMaterials;   // Materiais originais + o Material de Outline
-
-    public enum State
+    public enum EstadoComponente
     {
         Normal,
-        Selected
+        Selecionado
     }
+
+    [Header("Configurações Principais")]
+    [SerializeField, Tooltip("Animador opcional para disparar animações de seleção.")]
+    private Animator animador;
+
+    [SerializeField, Tooltip("Dados ScriptableObject com as informações da peça.")]
+    private SOPieceData dadosDaPeca;
+
+    [SerializeField, Tooltip("Estado atual de interação do componente.")]
+    private EstadoComponente estadoAtual = EstadoComponente.Normal;
+
+    [SerializeField, Tooltip("MeshFilter do modelo da peça.")]
+    private MeshFilter modeloDaPeca;
+
+    [Header("Configurações de Snapping (Encaixe)")]
+    [SerializeField, Tooltip("Distância máxima para atrair a peça ao slot de destino.")]
+    private float distanciaDeEncaixe = 1.0f;
+
+    [Header("Configurações de Arraste 3D")]
+    [SerializeField, Tooltip("Máscara de camadas para detectar o chão/bancada.")]
+    private LayerMask mascaraDeSuperficie = ~0;
+
+    [Header("Configurações de Destaque (Outline)")]
+    [SerializeField, Tooltip("Material Custom/OutlineShader aplicado ao selecionar.")]
+    private Material materialDeDestaque;
+
+    // Controle Interno
+    private Vector3 posicaoOriginal;
+    private Camera cameraPrincipal;
+    private IdentifiyerEncaixe slotDeDestino;
+
+    private bool estaEncaixado = false;
+    private bool estaInstalado = false;
+    private bool recemSelecionado = false;
+
+    // Arraste 3D
+    private float profundidadeDeArraste;
+    private Plane planoDeArraste;
+
+    // Renderizadores e Materiais
+    private Renderer renderizadorMesh;
+    private Material[] materiaisOriginais;
+    private Material[] materiaisComDestaque;
+
+    public string myID => dadosDaPeca != null ? dadosDaPeca.ID : "";
 
     private void Awake()
     {
-        if (anim == null)
+        if (animador == null)
         {
-            anim = GetComponent<Animator>();
+            animador = GetComponent<Animator>();
         }
 
-        originalPosition = transform.position;
-        mainCamera = Camera.main;
+        posicaoOriginal = transform.position;
+        cameraPrincipal = Camera.main;
 
-        // Configura a lista de materiais usando o Material do Inspector
-        SetupOutlineMaterial();
+        ConfigurarMateriaisDeDestaque();
     }
 
     private void Start()
     {
-        IdentifiyerEncaixe[] slots = FindObjectsByType<IdentifiyerEncaixe>(FindObjectsSortMode.None);
-        foreach (IdentifiyerEncaixe slot in slots)
+        IdentifiyerEncaixe[] slotsExistentes = FindObjectsByType<IdentifiyerEncaixe>(FindObjectsSortMode.None);
+        foreach (IdentifiyerEncaixe slot in slotsExistentes)
         {
-            if (slot.getID == InfoPeca.ID)
+            if (slot.GetID == dadosDaPeca.ID)
             {
-                targetSlot = slot;
+                slotDeDestino = slot;
                 break;
             }
         }
@@ -84,131 +84,114 @@ public class ComponenteBase : MonoBehaviour, ISelectable
 
     private void Update()
     {
-        if (isPlaced) return;
+        if (estaInstalado) return;
 
-        if (cur_state == State.Selected)
+        if (estadoAtual == EstadoComponente.Selecionado)
         {
-            if (justSelected)
+            if (recemSelecionado)
             {
-                justSelected = false;
+                recemSelecionado = false;
                 return;
             }
 
-            HandleDraggingAndSnapping();
+            ProcessarArrasteEEncaixe();
 
             if (Input.GetMouseButtonDown(0))
             {
-                DropObject();
+                SoltarObjeto();
             }
         }
     }
 
     public void OnSelect()
     {
-        SelectPeca();
+        SelecionarPeca();
     }
 
-    protected virtual void SelectPeca()
+    protected virtual void SelecionarPeca()
     {
-        if (isPlaced || cur_state == State.Selected) return;
+        if (estaInstalado || estadoAtual == EstadoComponente.Selecionado) return;
 
-        cur_state = State.Selected;
-        justSelected = true;
+        estadoAtual = EstadoComponente.Selecionado;
+        recemSelecionado = true;
 
-        if (mainCamera == null) mainCamera = Camera.main;
+        if (cameraPrincipal == null) cameraPrincipal = Camera.main;
 
-        // Calcula a profundidade inicial da peça em relação à câmera atual
-        dragDepth = mainCamera.WorldToScreenPoint(transform.position).z;
+        profundidadeDeArraste = cameraPrincipal.WorldToScreenPoint(transform.position).z;
 
-        if (anim != null) anim.SetTrigger("OnSelect");
+        if (animador != null) animador.SetTrigger("OnSelect");
 
-        SetOutlineVisible(true);
+        AlternarDestaqueVisivel(true);
 
         GameManager.Instance.SelectObject(gameObject);
 
-        if (targetSlot != null && myModel != null)
+        if (slotDeDestino != null && modeloDaPeca != null)
         {
-            targetSlot.UpdateModel(myModel.mesh);
+            slotDeDestino.UpdateModel(modeloDaPeca.mesh);
         }
     }
 
-    private void HandleDraggingAndSnapping()
+    private void ProcessarArrasteEEncaixe()
     {
-        if (mainCamera == null) mainCamera = Camera.main;
+        if (cameraPrincipal == null) cameraPrincipal = Camera.main;
 
-        // 1. Lança um raio a partir da posição do mouse na tela
-        Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+        Ray raio = cameraPrincipal.ScreenPointToRay(Input.mousePosition);
+        planoDeArraste = new Plane(-cameraPrincipal.transform.forward, transform.position);
 
-        // 2. Cria um plano 3D dinâmico alinhado com a visão da câmera na profundidade da peça
-        dragPlane = new Plane(-mainCamera.transform.forward, transform.position);
+        Vector3 posicaoMundoAlvo;
 
-        Vector3 targetWorldPos;
-
-        if (dragPlane.Raycast(ray, out float enter))
+        if (planoDeArraste.Raycast(raio, out float distancia))
         {
-            targetWorldPos = ray.GetPoint(enter);
+            posicaoMundoAlvo = raio.GetPoint(distancia);
         }
         else
         {
-            // Fallback usando a profundidade salva
-            Vector3 mouseScreenPos = Input.mousePosition;
-            mouseScreenPos.z = dragDepth;
-            targetWorldPos = mainCamera.ScreenToWorldPoint(mouseScreenPos);
+            Vector3 posicaoMouseTela = Input.mousePosition;
+            posicaoMouseTela.z = profundidadeDeArraste;
+            posicaoMundoAlvo = cameraPrincipal.ScreenToWorldPoint(posicaoMouseTela);
         }
 
-        // 3. Impede que a peça atravesse superfícies ou a bancada
-        /*if (Physics.Raycast(targetWorldPos + Vector3.up * 0.5f, Vector3.down, out RaycastHit hit, 1.5f, surfaceLayerMask))
-        {
-            float minY = hit.point.y + dragHeightOffset;
-            if (targetWorldPos.y < minY)
-            {
-                targetWorldPos.y = minY;
-            }
-        }*/
-        targetWorldPos.y = transform.position.y;
+        posicaoMundoAlvo.y = transform.position.y;
 
-        // 4. Snapping magnético em 3D com o slot correto
-        if (targetSlot != null)
+        // Atração (Snapping) ao slot de destino
+        if (slotDeDestino != null)
         {
-            Vector3 slotPos = targetSlot.transform.position;
-            float distance = Vector3.Distance(targetWorldPos, slotPos);
+            Vector3 posicaoDoSlot = slotDeDestino.transform.position;
+            float distanciaAteSlot = Vector3.Distance(posicaoMundoAlvo, posicaoDoSlot);
 
-            if (distance <= snapDistance)
+            if (distanciaAteSlot <= distanciaDeEncaixe)
             {
-                transform.position = slotPos;
-                isSnapped = true;
+                transform.position = posicaoDoSlot;
+                estaEncaixado = true;
                 return;
             }
         }
 
-        transform.position = targetWorldPos;
-        isSnapped = false;
+        transform.position = posicaoMundoAlvo;
+        estaEncaixado = false;
     }
 
-    private void DropObject()
+    private void SoltarObjeto()
     {
-        if (isSnapped && targetSlot != null)
+        if (estaEncaixado && slotDeDestino != null)
         {
-            // 1. Fixa a peça na posição do slot
-            transform.position = targetSlot.transform.position;
-            cur_state = State.Normal;
-            isPlaced = true;
+            transform.position = slotDeDestino.transform.position;
+            estadoAtual = EstadoComponente.Normal;
+            estaInstalado = true;
 
-            if (anim != null) anim.SetTrigger("OnDeselect");
+            if (animador != null) animador.SetTrigger("OnDeselect");
 
-            SetOutlineVisible(false);
+            AlternarDestaqueVisivel(false);
 
             GameManager.Instance.ClearObject();
-            targetSlot.UpdateModel(null);
+            slotDeDestino.UpdateModel(null);
 
-            Collider col = GetComponent<Collider>();
-            if (col != null)
+            if (TryGetComponent<Collider>(out var colisor))
             {
-                col.enabled = false;
+                colisor.enabled = false;
             }
 
-            // 2. Dispara a aproximação suave de Câmera (CameraController)
-            TriggerCameraZoom();
+            if (slotDeDestino.HasExtraStep) DispararZoomDaCamera(); else slotDeDestino.FinishitAll();
         }
         else
         {
@@ -216,57 +199,48 @@ public class ComponenteBase : MonoBehaviour, ISelectable
         }
     }
 
-    /// <summary>
-    /// Localiza o Ponto de Foco (FocusPoint) e comanda a Câmera a aproximar
-    /// </summary>
-    private void TriggerCameraZoom()
+    private void DispararZoomDaCamera()
     {
-        // Busca o FocusPoint na PEÇA ou em seus filhos
-        FocusPoint targetFocus = GetComponentInChildren<FocusPoint>();
+        FocusPoint pontoDeFoco = GetComponentInChildren<FocusPoint>();
 
-        // Se não houver na peça, busca no SLOT
-        if (targetFocus == null && targetSlot != null)
+        if (pontoDeFoco == null && slotDeDestino != null)
         {
-            targetFocus = targetSlot.GetComponentInChildren<FocusPoint>();
-            if (targetSlot.GetComponentInParent<IdentifiyerEncaixe>().hasScrew)
+            pontoDeFoco = slotDeDestino.GetComponentInChildren<FocusPoint>();
+
+            if (slotDeDestino.GetComponentInParent<IdentifiyerEncaixe>().HasExtraStep)
             {
-                targetSlot.GetComponentInParent<EncaixeBase>().MiniGameScrew();
+                slotDeDestino.GetComponentInParent<EncaixeBase>().MiniGame();
             }
         }
 
-        // Executa o Zoom se o controlador e o ponto existirem
         if (CameraController.instance != null)
         {
-            if (targetFocus != null)
+            if (pontoDeFoco != null)
             {
-                CameraController.instance.FocusOnPiece(targetFocus);
+                CameraController.instance.FocusOnPiece(pontoDeFoco);
             }
             else
             {
-                Debug.LogWarning($"[ComponenteBase] Peça '{gameObject.name}' foi encaixada, mas nenhum 'FocusPoint' foi encontrado nela ou no slot!");
+                Debug.LogWarning($"<color=blue>[ComponenteBase]</color> Peça '{gameObject.name}' foi encaixada, mas nenhum 'FocusPoint' foi encontrado!");
             }
-        }
-        else
-        {
-            Debug.LogError("[ComponenteBase] CameraController não foi encontrado na cena! Verifique se ele está na Main Camera.");
         }
     }
 
-    protected virtual void Deselect()
+    protected virtual void Deselecionar()
     {
-        if (isPlaced) return;
+        if (estaInstalado) return;
 
-        cur_state = State.Normal;
-        transform.position = originalPosition;
-        isSnapped = false;
+        estadoAtual = EstadoComponente.Normal;
+        transform.position = posicaoOriginal;
+        estaEncaixado = false;
 
-        SetOutlineVisible(false);
+        AlternarDestaqueVisivel(false);
 
-        if (anim != null) anim.SetTrigger("OnDeselect");
+        if (animador != null) animador.SetTrigger("OnDeselect");
 
-        if (targetSlot != null)
+        if (slotDeDestino != null)
         {
-            targetSlot.UpdateModel(null);
+            slotDeDestino.UpdateModel(null);
         }
 
         GameManager.Instance.ClearObject();
@@ -274,46 +248,43 @@ public class ComponenteBase : MonoBehaviour, ISelectable
 
     public void OnDeselect()
     {
-        Deselect();
+        Deselecionar();
     }
 
-    #region Sistema de Aplicação do Material de Outline
+    #region Gestão de Materiais de Destaque (Outline)
 
-    private void SetupOutlineMaterial()
+    private void ConfigurarMateriaisDeDestaque()
     {
-        meshRenderer = myModel != null ? myModel.GetComponent<Renderer>() : GetComponent<Renderer>();
+        renderizadorMesh = modeloDaPeca != null ? modeloDaPeca.GetComponent<Renderer>() : GetComponent<Renderer>();
 
-        if (meshRenderer == null || outlineMaterial == null)
+        if (renderizadorMesh == null || materialDeDestaque == null)
         {
-            if (outlineMaterial == null)
+            if (materialDeDestaque == null)
             {
-                Debug.LogWarning($"Atenção: O 'Outline Material' não foi atribuído no Inspector do objeto {gameObject.name}!");
+                Debug.LogWarning($"[ComponenteBase] O material de destaque não foi atribuído no Inspector em: {gameObject.name}");
             }
             return;
         }
 
-        // Salva os materiais originais do objeto
-        originalMaterials = meshRenderer.sharedMaterials;
+        materiaisOriginais = renderizadorMesh.sharedMaterials;
+        materiaisComDestaque = new Material[materiaisOriginais.Length + 1];
 
-        // Cria a lista com o Material de Outline no final
-        outlinedMaterials = new Material[originalMaterials.Length + 1];
-        for (int i = 0; i < originalMaterials.Length; i++)
+        for (int i = 0; i < materiaisOriginais.Length; i++)
         {
-            outlinedMaterials[i] = originalMaterials[i];
+            materiaisComDestaque[i] = materiaisOriginais[i];
         }
-        outlinedMaterials[outlinedMaterials.Length - 1] = outlineMaterial;
+        materiaisComDestaque[materiaisComDestaque.Length - 1] = materialDeDestaque;
     }
 
-    private void SetOutlineVisible(bool visible)
+    private void AlternarDestaqueVisivel(bool visivel)
     {
-        if (meshRenderer == null || outlineMaterial == null) return;
+        if (renderizadorMesh == null || materialDeDestaque == null) return;
 
-        // Alterna entre a lista comum de materiais e a lista com o material extra de Outline
-        meshRenderer.materials = visible ? outlinedMaterials : originalMaterials;
+        renderizadorMesh.materials = visivel ? materiaisComDestaque : materiaisOriginais;
     }
 
     #endregion
 
-    public string myID => InfoPeca != null ? InfoPeca.ID : "";
-
+    public void OnDoubleClick() { }
+    public void OnHold() { }
 }
