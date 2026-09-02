@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace SeriousGame.Hardware
-{
     /// <summary>
     /// Anexe este script nos GameObjects das Peças ou Parafusos que precisam de Zoom.
     /// Crie um arquivo chamado EXACTAMENTE "FocusPoint.cs" na Unity.
@@ -46,4 +44,3 @@ namespace SeriousGame.Hardware
             Gizmos.DrawLine(transform.position, worldPos);
         }
     }
-}
