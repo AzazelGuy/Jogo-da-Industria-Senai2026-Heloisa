@@ -20,7 +20,7 @@ public class EncaixeBase : MonoBehaviour
             GameObject screw = Instantiate(ScrewPrefab);
 
             screw.transform.position = s.position + new Vector3(0f, 1.5f, 0);
-            screw.GetComponent<Screw>().SetTarget(s.position);
+            screw.GetComponent<Connector>().SetTarget(s.position);
         }
     }
 }
