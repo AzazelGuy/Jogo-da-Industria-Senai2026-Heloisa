@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 5993434853046464870}
   - component: {fileID: 1915351786968048924}
   - component: {fileID: 6238164311608077910}
-  - component: {fileID: -4363316733852361522}
+  - component: {fileID: 1351446984204091435}
   - component: {fileID: 476288844377813869}
   m_Layer: 6
   m_Name: Cylinder
@@ -89,7 +89,7 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &-4363316733852361522
+--- !u!114 &1351446984204091435
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -102,6 +102,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   desiredPos: {x: 0, y: 0, z: 0}
+  desiredPlacement: {fileID: 0}
+  insertionSpeed: 1.5
+  completionDistance: 0.001
 --- !u!65 &476288844377813869
 BoxCollider:
   m_ObjectHideFlags: 0

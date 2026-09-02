@@ -1,5 +1,6 @@
 using UnityEngine;
 using SeriousGame.Hardware;
+using System.Collections.Generic;
 
 // A interface ISelectable permite que o GameManager ou o sistema de cliques interaja com este objeto
 public class ComponenteBase : MonoBehaviour, ISelectable
@@ -16,6 +17,9 @@ public class ComponenteBase : MonoBehaviour, ISelectable
 
     [Tooltip("O MeshFilter original desta peça.")]
     [SerializeField] private MeshFilter myModel;
+
+    [Tooltip("Locais de encaixe para ")]
+    [SerializeField] private List<GameObject> LocaisEncaixe;
 
     [Header("Configurações de Snapping (Encaixe Magnético)")]
     [Tooltip("Distância máxima entre a peça e o slot para ela 'grudar' no lugar.")]
@@ -79,6 +83,11 @@ public class ComponenteBase : MonoBehaviour, ISelectable
                 targetSlot = slot;
                 break;
             }
+        }
+
+        foreach (GameObject s in LocaisEncaixe)
+        {
+            s.SetActive(false);
         }
     }
 
@@ -207,6 +216,13 @@ public class ComponenteBase : MonoBehaviour, ISelectable
                 col.enabled = false;
             }
 
+            if (LocaisEncaixe.Count > 0)
+            {
+                foreach(GameObject s in LocaisEncaixe)
+                {
+                    s.SetActive(true);
+                }
+            }
             // 2. Dispara a aproximação suave de Câmera (CameraController)
             TriggerCameraZoom();
         }

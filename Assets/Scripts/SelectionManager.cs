@@ -14,6 +14,7 @@ public class SelectionManager : MonoBehaviour
 
     private Camera cachedCamera;
     private ISelectable currentSelected;
+    private ISelectable heldObject; // Guarda o objeto focado durante o drag
 
     private float pointerDownTime;
     private float lastClickTime;
@@ -30,15 +31,9 @@ public class SelectionManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    private void Start()
-    {
-        CacheCamera();
-    }
+    private void Start() => CacheCamera();
 
-    private void Update()
-    {
-        HandleInput();
-    }
+    private void Update() => HandleInput();
 
     private void HandleInput()
     {
@@ -46,6 +41,7 @@ public class SelectionManager : MonoBehaviour
         {
             pointerDownTime = Time.time;
             isHolding = false;
+            heldObject = GetSelectableUnderCursor(); // Captura o objeto no momento do clique
         }
 
         if (Input.GetMouseButton(0))
@@ -55,17 +51,13 @@ public class SelectionManager : MonoBehaviour
                 isHolding = true;
             }
 
-            if (isHolding)
+            // Envia o evento OnHold para o objeto capturado no inicio do clique
+            if (isHolding && heldObject != null)
             {
-                ISelectable hitObj = GetSelectableUnderCursor();
-                if (hitObj != null)
-                {
-                    hitObj.OnHold(); // Called every frame while button is held
-                }
+                heldObject.OnHold();
             }
         }
 
-        // Process release for single click and double click
         if (Input.GetMouseButtonUp(0))
         {
             if (!isHolding)
@@ -88,16 +80,15 @@ public class SelectionManager : MonoBehaviour
                     DeselectCurrent();
                 }
             }
+
+            heldObject = null; // Libera a referência ao soltar o mouse
         }
     }
 
     private ISelectable GetSelectableUnderCursor()
     {
-        if (cachedCamera == null)
-        {
-            CacheCamera();
-            if (cachedCamera == null) return null;
-        }
+        if (cachedCamera == null) CacheCamera();
+        if (cachedCamera == null) return null;
 
         Ray ray = cachedCamera.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit, maxDistance, selectableLayer))
@@ -131,9 +122,5 @@ public class SelectionManager : MonoBehaviour
     private void CacheCamera()
     {
         cachedCamera = Camera.main;
-        if (cachedCamera == null)
-        {
-            Debug.LogWarning("[SelectionManager] No camera tagged 'MainCamera' found in the scene.");
-        }
     }
 }
