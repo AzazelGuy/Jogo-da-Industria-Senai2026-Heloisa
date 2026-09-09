@@ -147,12 +147,12 @@ using UnityEngine;
         private void Update()
         {
             // Atalho para cancelar o zoom: Tecla ESC ou Botão Direito do Mouse
-            if (Input.GetKeyDown(KeyCode.Escape) || Input.GetMouseButtonDown(1))
+            /*if (Input.GetKeyDown(KeyCode.Escape) || Input.GetMouseButtonDown(1))
             {
                 if (estadoAtual == CameraState.Focused)
                 {
                     ReturnToOverview();
                 }
-            }
+            }*/
         }
     }

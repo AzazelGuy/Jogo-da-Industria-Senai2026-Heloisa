@@ -144,38 +144,22 @@ public class ComponenteBase : MonoBehaviour, ISelectable
     {
         if (mainCamera == null) mainCamera = Camera.main;
 
-        // 1. Lança um raio a partir da posição do mouse na tela
+        // 1. Gera o raio a partir do ponteiro do mouse
         Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
 
-        // 2. Cria um plano 3D dinâmico alinhado com a visão da câmera na profundidade da peça
-        dragPlane = new Plane(-mainCamera.transform.forward, transform.position);
+        // 2. Cria um plano horizontal (alinhado com a mesa / vetor Vector3.up)
+        // O plano fica exatamente na altura Y inicial/atual do objeto na mesa
+        Plane tablePlane = new Plane(Vector3.up, new Vector3(0, originalPosition.y + dragHeightOffset, 0));
 
-        Vector3 targetWorldPos;
+        Vector3 targetWorldPos = transform.position;
 
-        if (dragPlane.Raycast(ray, out float enter))
+        // 3. Projeta o raio no plano horizontal da mesa
+        if (tablePlane.Raycast(ray, out float enter))
         {
             targetWorldPos = ray.GetPoint(enter);
         }
-        else
-        {
-            // Fallback usando a profundidade salva
-            Vector3 mouseScreenPos = Input.mousePosition;
-            mouseScreenPos.z = dragDepth;
-            targetWorldPos = mainCamera.ScreenToWorldPoint(mouseScreenPos);
-        }
 
-        // 3. Impede que a peça atravesse superfícies ou a bancada
-        /*if (Physics.Raycast(targetWorldPos + Vector3.up * 0.5f, Vector3.down, out RaycastHit hit, 1.5f, surfaceLayerMask))
-        {
-            float minY = hit.point.y + dragHeightOffset;
-            if (targetWorldPos.y < minY)
-            {
-                targetWorldPos.y = minY;
-            }
-        }*/
-        targetWorldPos.y = transform.position.y;
-
-        // 4. Snapping magnético em 3D com o slot correto
+        // 4. Snapping magnético 3D com o slot de destino
         if (targetSlot != null)
         {
             Vector3 slotPos = targetSlot.transform.position;
@@ -183,12 +167,14 @@ public class ComponenteBase : MonoBehaviour, ISelectable
 
             if (distance <= snapDistance)
             {
+                // Opcional: Desloca ou eleva a peça visualmente se o slot estiver em uma altura diferente (ex: gabinete acima da mesa)
                 transform.position = slotPos;
                 isSnapped = true;
                 return;
             }
         }
 
+        // 5. Atualiza a posição mantendo o deslizamento na superfície
         transform.position = targetWorldPos;
         isSnapped = false;
     }

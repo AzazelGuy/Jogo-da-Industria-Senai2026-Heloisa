@@ -40,6 +40,11 @@ public class IdentifiyerEncaixe : MonoBehaviour
                 StepChecker.Instance.CheckConnectorProgress(this);
             }
         }
+
+        if (IsFullyAssembled())
+        {
+            CameraController.instance.ReturnToOverview();
+        }
     }
 
     public int GetCompletedCount()
