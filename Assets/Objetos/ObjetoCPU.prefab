@@ -158,7 +158,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   myID: ioiuuouu
   usedModel: {fileID: 6370477239494987061}
-  Tipo: 0
+  Tipo: 3
   ScrewsPositions: []
   CompletedScrews: 
   hasScrewMiniStep: 0

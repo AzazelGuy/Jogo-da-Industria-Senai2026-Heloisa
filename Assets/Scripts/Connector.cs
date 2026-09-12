@@ -1,57 +1,59 @@
 using UnityEngine;
 
 /// <summary>
-/// Tipos de interação e movimento para conectores, parafusos, alavancas e cabos.
+/// Tipos de interaï¿½ï¿½o e movimento para conectores, parafusos, alavancas e cabos.
 /// </summary>
 public enum ConnectorType
 {
     LinearMove,       // Movimento linear (parafusos, cabos)
-    Rotation,         // Rotação (travas, alavancas)
-    AnimationTrigger, // Dispara uma animação específica no Animator
-    InstantSnap       // Encaixe instantâneo
+    Rotation,         // Rotaï¿½ï¿½o (travas, alavancas)
+    AnimationTrigger, // Dispara uma animaï¿½ï¿½o especï¿½fica no Animator
+    InstantSnap       // Encaixe instantï¿½neo
 }
 
 /// <summary>
-/// Controla peças encaixáveis por clique contínuo ou ação direta.
+/// Controla peï¿½as encaixï¿½veis por clique contï¿½nuo ou aï¿½ï¿½o direta.
 /// </summary>
 public class Connector : MonoBehaviour, ISelectable
 {
-    [Header("Configurações do Conector")]
+    [Header("Configuraï¿½ï¿½es do Conector")]
     [SerializeField, Tooltip("Modo de encaixe do conector.")]
     private ConnectorType tipoDeConexao = ConnectorType.LinearMove;
 
-    [SerializeField, Tooltip("Velocidade do movimento ou rotação.")]
+    [SerializeField, Tooltip("Velocidade do movimento ou rotaï¿½ï¿½o.")]
     private float velocidade = 1.5f;
 
-    [SerializeField, Tooltip("Tolerância de distância/ângulo para considerar o movimento concluído.")]
+    [SerializeField, Tooltip("Tolerï¿½ncia de distï¿½ncia/ï¿½ngulo para considerar o movimento concluï¿½do.")]
     private float limiteDeConclusao = 0.01f;
 
-    [Header("Transformações de Destino")]
+    [Header("Transformaï¿½ï¿½es de Destino")]
     [SerializeField] private Vector3 posicaoDesejada;
     [SerializeField] private Vector3 rotacaoDesejadaEuler;
 
-    [Header("Animação (Se Tipo == AnimationTrigger)")]
+    [Header("Animaï¿½ï¿½o (Se Tipo == AnimationTrigger)")]
     [SerializeField] private Animator animador;
     [SerializeField] private string nomeDoGatilhoAnimacao = "Connect";
 
-    [Header("Referências de Encaixe")]
+    [Header("Referï¿½ncias de Encaixe")]
     [SerializeField] private IdentifiyerEncaixe encaixeIdentifiyer;
     [SerializeField] private EncaixeBase encaixeBase;
     [SerializeField] private int indiceDoConector;
 
     private bool estaConectado;
 
-    // --- Métodos de Configuração Externa ---
+    // --- Mï¿½todos de Configuraï¿½ï¿½o Externa ---
 
     public void SetPlacement(IdentifiyerEncaixe alvo, int indice = 0)
     {
         encaixeIdentifiyer = alvo;
+        encaixeBase = null;
         indiceDoConector = indice;
     }
 
     public void SetPlacement(EncaixeBase alvo, int indice = 0)
     {
         encaixeBase = alvo;
+        encaixeIdentifiyer = null;
         indiceDoConector = indice;
     }
 
@@ -66,7 +68,7 @@ public class Connector : MonoBehaviour, ISelectable
         rotacaoDesejadaEuler = rotacaoEuler;
     }
 
-    // --- Lógica de Interação ---
+    // --- Lï¿½gica de Interaï¿½ï¿½o ---
 
     public void OnHold()
     {
@@ -136,7 +138,7 @@ public class Connector : MonoBehaviour, ISelectable
 
         estaConectado = true;
 
-        // Ajusta posição/rotação final no encerramento
+        // Ajusta posiï¿½ï¿½o/rotaï¿½ï¿½o final no encerramento
         if (tipoDeConexao == ConnectorType.LinearMove)
         {
             transform.position = posicaoDesejada;
@@ -164,14 +166,14 @@ public class Connector : MonoBehaviour, ISelectable
             encaixeBase.OnConectorPlaced(indiceDoConector);
         }
 
-        // 3. Desativa o Collider para evitar interações pós-encaixe
+        // 3. Desativa o Collider para evitar interaï¿½ï¿½es pï¿½s-encaixe
         if (TryGetComponent<Collider>(out var colisor))
         {
             colisor.enabled = false;
         }
     }
 
-    // --- Métodos da Interface ISelectable ---
+    // --- Mï¿½todos da Interface ISelectable ---
     public void OnSelect() { }
     public void OnDeselect() { }
     public void OnDoubleClick() { }

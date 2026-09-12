@@ -11,6 +11,11 @@ public class EncaixeBase : MonoBehaviour
         {
             identifiyer = GetComponent<IdentifiyerEncaixe>();
         }
+
+        if (identifiyer != null)
+        {
+            identifiyer.gameObject.SetActive(true);
+        }
     }
 
     /// <summary>
@@ -20,7 +25,7 @@ public class EncaixeBase : MonoBehaviour
     {
         if (identifiyer == null || ScrewPrefab == null) return;
 
-        // Limpa e prepara a lista de verificação se estiver vazia ou desalinhada
+        // Limpa e prepara a lista de verificaï¿½ï¿½o se estiver vazia ou desalinhada
         if (identifiyer.CompletedScrews.Count != identifiyer.ScrewsPositions.Count)
         {
             identifiyer.CompletedScrews.Clear();
@@ -30,7 +35,7 @@ public class EncaixeBase : MonoBehaviour
             }
         }
 
-        // Instancia os conectores passando os alvos e seus respectivos índices
+        // Instancia os conectores passando os alvos e seus respectivos ï¿½ndices
         for (int i = 0; i < identifiyer.ScrewsPositions.Count; i++)
         {
             Transform posAlvo = identifiyer.ScrewsPositions[i];
@@ -39,20 +44,17 @@ public class EncaixeBase : MonoBehaviour
             // Posiciona um pouco acima do slot inicial
             objConector.transform.position = posAlvo.position + new Vector3(0f, 1.5f, 0f);
 
-            // Configura a referência no componente Conector
+            // Configura a referï¿½ncia no componente Conector
             if (objConector.TryGetComponent<Connector>(out var conector))
             {
                 conector.SetTarget(posAlvo.position, posAlvo.eulerAngles);
-                conector.SetPlacement(this, i);
-
-                // Associa também a referência do Identifiyer
                 conector.SetPlacement(identifiyer, i);
             }
         }
     }
 
-    /// Notificação recebida do Conector ao ser totalmente encaixado.
-    /// Índice do conector na lista de posições.</param
+    /// Notificaï¿½ï¿½o recebida do Conector ao ser totalmente encaixado.
+    /// ï¿½ndice do conector na lista de posiï¿½ï¿½es.</param
     public void OnConectorPlaced(int index)
     {
         if (identifiyer != null)
@@ -60,7 +62,7 @@ public class EncaixeBase : MonoBehaviour
             identifiyer.NotifyConnectorPlaced(index);
         }
 
-        // Notifica o StepChecker para validar o avanço de etapa
+        // Notifica o StepChecker para validar o avanï¿½o de etapa
         if (StepChecker.Instance != null && identifiyer != null)
         {
             StepChecker.Instance.CheckConnectorProgress(identifiyer);
