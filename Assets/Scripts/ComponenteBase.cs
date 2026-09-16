@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using TMPro; // Adicionado para suporte ao TextMeshPro UI
 
 public class ComponenteBase : MonoBehaviour, ISelectable
 {
@@ -10,8 +11,11 @@ public class ComponenteBase : MonoBehaviour, ISelectable
     [SerializeField] private MeshFilter myModel;
     [SerializeField] private List<GameObject> LocaisEncaixe;
 
+    [Header("Configurações da UI")]
+    [Tooltip("Elemento de Texto da UI que exibirá o nome da peça apontada.")]
+    [SerializeField] private TextMeshProUGUI pieceNameText;
+
     [Header("Configurações do StepChecker")]
-    [Tooltip("Define se esta peça irá interagir e ser registrada no StepChecker ao ser colocada.")]
     [SerializeField] private bool interactWithStepChecker = true;
 
     [Header("Configurações de Snapping")]
@@ -24,7 +28,6 @@ public class ComponenteBase : MonoBehaviour, ISelectable
     [Header("Configurações do Outline")]
     [SerializeField] private Material outlineMaterial;
 
-    // --- VARIÁVEIS INTERNAS ---
     private Vector3 originalPosition;
     private Camera mainCamera;
     private IdentifiyerEncaixe targetSlot;
@@ -37,6 +40,21 @@ public class ComponenteBase : MonoBehaviour, ISelectable
     private Material[] outlinedMaterials;
 
     public enum State { Normal, Selected }
+
+    /// <summary>
+    /// Propriedade que retorna o Nome da peça configurado na SOPieceData ou o nome do GameObject.
+    /// </summary>
+    public string PieceName
+    {
+        get
+        {
+            if (InfoPeca != null && !string.IsNullOrEmpty(InfoPeca.Nome))
+            {
+                return InfoPeca.Nome;
+            }
+            return gameObject.name;
+        }
+    }
 
     private void Awake()
     {
@@ -61,7 +79,6 @@ public class ComponenteBase : MonoBehaviour, ISelectable
     private void Start()
     {
         FindSlot();
-        // OVERSIGHT FIX: Garante que os pontos de encaixe desta peça fiquem invisíveis/desativados no início
         SetLocalSlotsVisible(false);
     }
 
@@ -71,26 +88,18 @@ public class ComponenteBase : MonoBehaviour, ISelectable
         return myID;
     }
 
-    /// <summary>
-    /// Verifica se o slot pertence a alguma peça (ComponenteBase) e se essa peça pai já foi montada.
-    /// </summary>
     private bool IsSlotAvailableForUse(IdentifiyerEncaixe slot)
     {
         if (slot == null) return false;
 
-        // Procura se o slot está dentro de algum ComponenteBase na hierarquia
         ComponenteBase parentPiece = slot.GetComponentInParent<ComponenteBase>();
-
-        // Se o slot pertence a um ComponenteBase que é a própria peça que estamos segurando, ignora
         if (parentPiece == this) return false;
 
-        // Se o slot pertence a outro ComponenteBase, ele SÓ está disponível se a peça pai já tiver sido ENCAIXADA (IsPlaced)
         if (parentPiece != null)
         {
             return parentPiece.IsPlaced;
         }
 
-        // Se o slot não pertence a nenhuma peça móvel (ex: slots fixos do gabinete/bancada), está disponível
         return true;
     }
 
@@ -99,11 +108,9 @@ public class ComponenteBase : MonoBehaviour, ISelectable
         targetSlot = null;
         string expectedId = GetPieceId();
 
-        // 1. Procura na hierarquia local por slots compatíveis E disponíveis
         foreach (IdentifiyerEncaixe slot in FindCompatibleSlotsInCurrentHierarchy())
         {
             if (slot == null) continue;
-
             if ((slot.CanAcceptPieceId(expectedId) || slot.CanAcceptPiece(this) || slot.getID == expectedId)
                 && IsSlotAvailableForUse(slot))
             {
@@ -112,13 +119,11 @@ public class ComponenteBase : MonoBehaviour, ISelectable
             }
         }
 
-        // 2. Se não achou na hierarquia local, busca na cena inteira
         if (targetSlot == null)
         {
             foreach (IdentifiyerEncaixe slot in FindObjectsByType<IdentifiyerEncaixe>(FindObjectsSortMode.None))
             {
                 if (slot == null) continue;
-
                 if ((slot.CanAcceptPieceId(expectedId) || slot.CanAcceptPiece(this) || slot.getID == expectedId)
                     && IsSlotAvailableForUse(slot))
                 {
@@ -128,7 +133,6 @@ public class ComponenteBase : MonoBehaviour, ISelectable
             }
         }
 
-        // 3. Só ativa o slot se ele realmente for válido e estiver disponível para encaixe
         SetLocalSlotsVisible(false);
         if (targetSlot != null)
         {
@@ -152,7 +156,6 @@ public class ComponenteBase : MonoBehaviour, ISelectable
 
     private void HandleReturnToOverview()
     {
-        // Se a própria peça ainda não foi colocada, mantém seus slots locais desativados
         if (!isPlaced)
         {
             SetLocalSlotsVisible(false);
@@ -168,7 +171,6 @@ public class ComponenteBase : MonoBehaviour, ISelectable
 
     private void SetLocalSlotsVisible(bool visible)
     {
-        // Bloqueia exibição de slots internos caso a própria peça não tenha sido montada
         if (!isPlaced && visible) return;
 
         IdentifiyerEncaixe[] sockets = GetComponentsInChildren<IdentifiyerEncaixe>(true);
@@ -214,6 +216,28 @@ public class ComponenteBase : MonoBehaviour, ISelectable
         }
     }
 
+    #region Implementação de Hover (Ponteiro UI)
+
+    public void OnPointerEnter()
+    {
+        UpdateUIText(PieceName);
+    }
+
+    public void OnPointerExit()
+    {
+        UpdateUIText("");
+    }
+
+    private void UpdateUIText(string text)
+    {
+        if (pieceNameText != null)
+        {
+            pieceNameText.text = text;
+        }
+    }
+
+    #endregion
+
     public void OnSelect()
     {
         FindSlot();
@@ -234,7 +258,6 @@ public class ComponenteBase : MonoBehaviour, ISelectable
 
         GameManager.Instance.SelectObject(gameObject);
 
-        // Atualiza a prévia visual no slot apenas se o slot for válido e estiver ativado
         if (targetSlot != null && IsSlotAvailableForUse(targetSlot))
         {
             targetSlot.SetSocketVisible(true);
@@ -292,10 +315,8 @@ public class ComponenteBase : MonoBehaviour, ISelectable
             Collider col = GetComponent<Collider>();
             if (col != null) col.enabled = false;
 
-            // Libera os slots/locais de encaixe contidos NESTA peça agora que ela foi devidamente montada
             SetLocalSlotsVisible(true);
 
-            // Notifica o StepChecker se estiver habilitado
             if (interactWithStepChecker && StepChecker.Instance != null)
             {
                 StepChecker.Instance.RegisterPiecePlaced(this);

@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class UiController : MonoBehaviour
 {
     public static UiController Instance;
 
     [SerializeField] private CanvasGroup _winUi;
-
+    [SerializeField] private TextMeshProUGUI nameText;
     private void Awake()
     {
         if (Instance == null)
@@ -43,4 +44,5 @@ public class UiController : MonoBehaviour
         _winUi.gameObject.SetActive(b);
     }
     public CanvasGroup winUI => _winUi;
+    public TextMeshProUGUI textNameUI => nameText;
 }

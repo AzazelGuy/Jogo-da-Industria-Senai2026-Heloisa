@@ -1,4 +1,5 @@
 using UnityEngine;
+using TMPro;
 
 public class SelectionManager : MonoBehaviour
 {
@@ -14,7 +15,8 @@ public class SelectionManager : MonoBehaviour
 
     private Camera cachedCamera;
     private ISelectable currentSelected;
-    private ISelectable heldObject; // Guarda o objeto focado durante o drag
+    private ISelectable currentHovered; // Guarda a peça sendo focada no Hover
+    private ISelectable heldObject;
 
     private float pointerDownTime;
     private float lastClickTime;
@@ -33,7 +35,40 @@ public class SelectionManager : MonoBehaviour
 
     private void Start() => CacheCamera();
 
-    private void Update() => HandleInput();
+    private void Update()
+    {
+        HandleHover();
+        HandleInput();
+    }
+
+    /// <summary>
+    /// Processa o estado de passagem de mouse (Hover) continuamente a cada frame.
+    /// </summary>
+    private void HandleHover()
+    {
+        ISelectable hoveredNow = GetSelectableUnderCursor();
+
+        if (hoveredNow != currentHovered)
+        {
+            if (currentHovered != null)
+            {
+                currentHovered.OnPointerExit();
+                if (UiController.Instance.textNameUI != null) UiController.Instance.textNameUI.text = "";
+            }
+
+            currentHovered = hoveredNow;
+
+            if (currentHovered != null)
+            {
+                currentHovered.OnPointerEnter();
+
+                if (UiController.Instance.textNameUI != null && currentHovered is ComponenteBase comp)
+                {
+                    UiController.Instance.textNameUI.text = comp.PieceName;
+                }
+            }
+        }
+    }
 
     private void HandleInput()
     {
@@ -41,7 +76,7 @@ public class SelectionManager : MonoBehaviour
         {
             pointerDownTime = Time.time;
             isHolding = false;
-            heldObject = GetSelectableUnderCursor(); // Captura o objeto no momento do clique
+            heldObject = GetSelectableUnderCursor();
         }
 
         if (Input.GetMouseButton(0))
@@ -51,7 +86,6 @@ public class SelectionManager : MonoBehaviour
                 isHolding = true;
             }
 
-            // Envia o evento OnHold para o objeto capturado no inicio do clique
             if (isHolding && heldObject != null)
             {
                 heldObject.OnHold();
@@ -81,7 +115,7 @@ public class SelectionManager : MonoBehaviour
                 }
             }
 
-            heldObject = null; // Libera a referência ao soltar o mouse
+            heldObject = null;
         }
     }
 

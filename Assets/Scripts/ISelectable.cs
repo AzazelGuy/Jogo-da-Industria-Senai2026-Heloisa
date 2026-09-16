@@ -24,4 +24,8 @@ public interface ISelectable
     /// Chamado enquanto o botão de seleção é mantido pressionado sobre o objeto.
     /// </summary>
     void OnHold() { }
+
+    // Métodos para detecção de passagem do mouse (Hover)
+    void OnPointerEnter() { }
+    void OnPointerExit() { }
 }
