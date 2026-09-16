@@ -39,6 +39,8 @@ public class Connector : MonoBehaviour, ISelectable
     [SerializeField] private EncaixeBase encaixeBase;
     [SerializeField] private int indiceDoConector;
 
+    [SerializeField] private AudioClip SFXPlaced;
+
     private bool estaConectado;
 
     // --- M�todos de Configura��o Externa ---
@@ -137,7 +139,7 @@ public class Connector : MonoBehaviour, ISelectable
         if (estaConectado) return;
 
         estaConectado = true;
-
+        AudioManager.Instance.PlaySFX(SFXPlaced);
         // Ajusta posi��o/rota��o final no encerramento
         if (tipoDeConexao == ConnectorType.LinearMove)
         {

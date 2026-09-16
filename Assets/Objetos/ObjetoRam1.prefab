@@ -51,6 +51,9 @@ MonoBehaviour:
   cur_state: 0
   myModel: {fileID: 1748806030539881091}
   LocaisEncaixe: []
+  ParticlesPlace: {fileID: 1133285911889207144, guid: 6b1ad51cc55f27b42b451ab225da1de3, type: 3}
+  pieceNameText: {fileID: 0}
+  interactWithStepChecker: 1
   snapDistance: 2.6
   surfaceLayerMask:
     serializedVersion: 2

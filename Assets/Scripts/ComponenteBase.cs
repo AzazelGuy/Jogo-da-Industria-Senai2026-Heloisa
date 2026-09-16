@@ -10,6 +10,7 @@ public class ComponenteBase : MonoBehaviour, ISelectable
     [SerializeField] private State cur_state;
     [SerializeField] private MeshFilter myModel;
     [SerializeField] private List<GameObject> LocaisEncaixe;
+    [SerializeField] private GameObject ParticlesPlace;
 
     [Header("Configurações da UI")]
     [Tooltip("Elemento de Texto da UI que exibirá o nome da peça apontada.")]
@@ -323,6 +324,7 @@ public class ComponenteBase : MonoBehaviour, ISelectable
             }
 
             TriggerCameraZoom();
+            Instantiate(ParticlesPlace, transform.position,Quaternion.identity);
         }
         else
         {

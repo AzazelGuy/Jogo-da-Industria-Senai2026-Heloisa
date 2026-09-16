@@ -112,6 +112,7 @@ MonoBehaviour:
   encaixeIdentifiyer: {fileID: 0}
   encaixeBase: {fileID: 0}
   indiceDoConector: 0
+  SFXPlaced: {fileID: 8300000, guid: 77712e64cc1de7045bd4010c005152fb, type: 3}
 --- !u!65 &476288844377813869
 BoxCollider:
   m_ObjectHideFlags: 0
