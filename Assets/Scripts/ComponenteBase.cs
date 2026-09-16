@@ -4,52 +4,52 @@ using System.Collections.Generic;
 // A interface ISelectable permite que o GameManager ou o sistema de cliques interaja com este objeto
 public class ComponenteBase : MonoBehaviour, ISelectable
 {
-    [Header("Configura��es Principais")]
-    [Tooltip("Animador opcional para tocar anima��es ao selecionar/deselecionar.")]
+    [Header("Configurações Principais")]
+    [Tooltip("Animador opcional para tocar animações ao selecionar/deselecionar.")]
     [SerializeField] private Animator anim;
 
-    [Tooltip("Informa��o da Pe�a")]
+    [Tooltip("Informação da Peça")]
     [SerializeField] private SOPieceData InfoPeca;
 
-    [Tooltip("Estado atual da pe�a (Normal = na bancada / Selected = sendo arrastada).")]
+    [Tooltip("Estado atual da peça (Normal = na bancada / Selected = sendo arrastada).")]
     [SerializeField] private State cur_state;
 
-    [Tooltip("O MeshFilter original desta pe�a.")]
+    [Tooltip("O MeshFilter original desta peça.")]
     [SerializeField] private MeshFilter myModel;
 
     [Tooltip("Locais de encaixe para ")]
     [SerializeField] private List<GameObject> LocaisEncaixe;
 
-    [Header("Configura��es de Snapping (Encaixe Magn�tico)")]
-    [Tooltip("Dist�ncia m�xima entre a pe�a e o slot para ela 'grudar' no lugar.")]
+    [Header("Configurações de Snapping (Encaixe Magnético)")]
+    [Tooltip("Distância máxima entre a peça e o slot para ela 'grudar' no lugar.")]
     [SerializeField] private float snapDistance = 1.0f;
 
-    [Header("Configura��es de Arraste em 3D")]
-    [Tooltip("LayerMask de superf�cies/bancada para evitar que a pe�a atravesse o ch�o.")]
+    [Header("Configurações de Arraste em 3D")]
+    [Tooltip("LayerMask de superfícies/bancada para evitar que a peça atravesse o chão.")]
     [SerializeField] private LayerMask surfaceLayerMask = ~0;
 
-    [Tooltip("Eleva��o suave em Y ao arrastar para n�o colidir com a bancada.")]
+    [Tooltip("Elevação suave em Y ao arrastar para não colidir com a bancada.")]
     [SerializeField] private float dragHeightOffset = 0.05f;
 
-    [Header("Configura��es do Outline (Material)")]
+    [Header("Configurações do Outline (Material)")]
     [Tooltip("Arraste aqui o Material 'M_Outline' que usa o Custom/OutlineShader.")]
     [SerializeField] private Material outlineMaterial;
 
-    // --- VARI�VEIS INTERNAS DE CONTROLE ---
-    private Vector3 originalPosition;        // Guarda a posi��o original da pe�a na bancada
-    private Camera mainCamera;               // Refer�ncia para a C�mera Principal
-    private IdentifiyerEncaixe targetSlot;   // O slot exato onde esta pe�a deve ser instalada
-    private bool isSnapped = false;          // True quando a pe�a est� grudada no slot
-    private bool isPlaced = false;           // True quando a pe�a � instalada definitivamente
-    private bool justSelected = false;       // Trava para evitar soltar a pe�a no mesmo frame do clique
+    // --- VARIÁVEIS INTERNAS DE CONTROLE ---
+    private Vector3 originalPosition;        // Guarda a posição original da peça na bancada
+    private Camera mainCamera;               // Referência para a Câmera Principal
+    private IdentifiyerEncaixe targetSlot;   // O slot exato onde esta peça deve ser instalada
+    private bool isSnapped = false;          // True quando a peça está grudada no slot
+    private bool isPlaced = false;           // True quando a peça é instalada definitivamente
+    private bool justSelected = false;       // Trava para evitar soltar a peça no mesmo frame do clique
 
     // Controle de Arraste 3D
-    private float dragDepth;                 // Dist�ncia da pe�a at� a c�mera no momento da sele��o
-    private Plane dragPlane;                 // Plano 3D din�mico relativo � c�mera
+    private float dragDepth;                 // Distância da peça até a câmera no momento da seleção
+    private Plane dragPlane;                 // Plano 3D dinâmico relativo à câmera
 
     // Controle de Materiais para o efeito de Outline
     private Renderer meshRenderer;
-    private Material[] originalMaterials;   // Materiais originais da pe�a
+    private Material[] originalMaterials;   // Materiais originais da peça
     private Material[] outlinedMaterials;   // Materiais originais + o Material de Outline
 
     public enum State
@@ -136,6 +136,7 @@ public class ComponenteBase : MonoBehaviour, ISelectable
         if (targetSlot != null)
         {
             targetSlot.gameObject.SetActive(true);
+            targetSlot.SetSocketVisible(true);
         }
     }
 
@@ -226,7 +227,7 @@ public class ComponenteBase : MonoBehaviour, ISelectable
 
         if (mainCamera == null) mainCamera = Camera.main;
 
-        // Calcula a profundidade inicial da pe�a em rela��o � c�mera atual
+        // Calcula a profundidade inicial da peça em relação à câmera atual
         dragDepth = mainCamera.WorldToScreenPoint(transform.position).z;
 
         if (anim != null) anim.SetTrigger("OnSelect");
@@ -235,9 +236,13 @@ public class ComponenteBase : MonoBehaviour, ISelectable
 
         GameManager.Instance.SelectObject(gameObject);
 
-        if (targetSlot != null && myModel != null)
+        if (targetSlot != null)
         {
-            targetSlot.UpdateModel(myModel.mesh);
+            targetSlot.SetSocketVisible(true);
+            if (myModel != null)
+            {
+                targetSlot.UpdateModel(myModel.mesh);
+            }
         }
     }
 
@@ -264,7 +269,7 @@ public class ComponenteBase : MonoBehaviour, ISelectable
             targetWorldPos = ray.GetPoint(enter);
         }
 
-        // 4. Snapping magn�tico 3D com o slot de destino
+        // 4. Snapping magnético 3D com o slot de destino
         if (targetSlot != null)
         {
             Vector3 slotPos = targetSlot.transform.position;
@@ -278,7 +283,7 @@ public class ComponenteBase : MonoBehaviour, ISelectable
             }
         }
 
-        // 5. Atualiza a posi��o mantendo o deslizamento na superf�cie correta
+        // 5. Atualiza a posição mantendo o deslizamento na superfície correta
         transform.position = targetWorldPos;
         isSnapped = false;
     }
@@ -287,7 +292,7 @@ public class ComponenteBase : MonoBehaviour, ISelectable
     {
         if (isSnapped && targetSlot != null)
         {
-            // 1. Fixa a pe�a na posi��o do slot
+            // 1. Fixa a peça na posição do slot
             transform.position = targetSlot.transform.position;
             cur_state = State.Normal;
             isPlaced = true;
@@ -309,7 +314,7 @@ public class ComponenteBase : MonoBehaviour, ISelectable
             {
                 SetLocalSlotsVisible(true);
             }
-            // 2. Dispara a aproxima��o suave de C�mera (CameraController)
+            // 2. Dispara a aproximação suave de Câmera (CameraController)
             TriggerCameraZoom();
         }
         else
@@ -319,20 +324,34 @@ public class ComponenteBase : MonoBehaviour, ISelectable
     }
 
     /// <summary>
-    /// Localiza o Ponto de Foco (FocusPoint) e comanda a C�mera a aproximar
+    /// Localiza o Ponto de Foco (FocusPoint) e comanda a Câmera a aproximar
     /// </summary>
     private void TriggerCameraZoom()
     {
-        // Busca o FocusPoint na PE�A ou em seus filhos
+        // Busca o FocusPoint na PEÇA ou em seus filhos
         FocusPoint targetFocus = GetComponentInChildren<FocusPoint>();
 
-        // Se n�o houver na pe�a, busca no SLOT
+        // Se não houver na peça, busca no SLOT
         if (targetFocus == null && targetSlot != null)
         {
             targetFocus = targetSlot.GetComponentInChildren<FocusPoint>();
-            if (targetSlot.GetComponentInParent<IdentifiyerEncaixe>().hasScrew)
+        }
+
+        if (targetSlot != null)
+        {
+            IdentifiyerEncaixe slotIdentifier = targetSlot;
+            EncaixeBase slotBase = targetSlot.GetComponent<EncaixeBase>()
+                ?? targetSlot.GetComponentInParent<EncaixeBase>()
+                ?? targetSlot.GetComponentInChildren<EncaixeBase>();
+
+            bool shouldSpawnScrews = slotBase != null && (slotIdentifier.hasScrew || slotIdentifier.ScrewsPositions.Count > 0);
+            if (shouldSpawnScrews)
             {
-                targetSlot.GetComponentInParent<EncaixeBase>().MiniGameScrew();
+                slotBase.MiniGameScrew();
+            }
+            else if (slotIdentifier != null && slotIdentifier.hasScrew)
+            {
+                Debug.LogWarning($"[ComponenteBase] O slot '{targetSlot.name}' tem hasScrew=true, mas não encontrou um EncaixeBase válido para disparar o minigame.");
             }
         }
 
@@ -345,12 +364,12 @@ public class ComponenteBase : MonoBehaviour, ISelectable
             }
             else
             {
-                Debug.LogWarning($"[ComponenteBase] Pe�a '{gameObject.name}' foi encaixada, mas nenhum 'FocusPoint' foi encontrado nela ou no slot!");
+                Debug.LogWarning($"[ComponenteBase] Peça '{gameObject.name}' foi encaixada, mas nenhum 'FocusPoint' foi encontrado nela ou no slot!");
             }
         }
         else
         {
-            Debug.LogError("[ComponenteBase] CameraController n�o foi encontrado na cena! Verifique se ele est� na Main Camera.");
+            Debug.LogError("[ComponenteBase] CameraController não foi encontrado na cena! Verifique se ele está na Main Camera.");
         }
     }
 
@@ -379,7 +398,7 @@ public class ComponenteBase : MonoBehaviour, ISelectable
         Deselect();
     }
 
-    #region Sistema de Aplica��o do Material de Outline
+    #region Sistema de Aplicação do Material de Outline
 
     private void SetupOutlineMaterial()
     {
@@ -389,7 +408,7 @@ public class ComponenteBase : MonoBehaviour, ISelectable
         {
             if (outlineMaterial == null)
             {
-                Debug.LogWarning($"Aten��o: O 'Outline Material' n�o foi atribu�do no Inspector do objeto {gameObject.name}!");
+                Debug.LogWarning($"Atenção: O 'Outline Material' não foi atribuído no Inspector do objeto {gameObject.name}!");
             }
             return;
         }

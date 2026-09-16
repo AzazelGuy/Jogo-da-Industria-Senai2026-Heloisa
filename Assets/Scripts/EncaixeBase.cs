@@ -7,14 +7,26 @@ public class EncaixeBase : MonoBehaviour
 
     private void Start()
     {
-        if (identifiyer == null)
-        {
-            identifiyer = GetComponent<IdentifiyerEncaixe>();
-        }
+        ResolveIdentifier();
 
         if (identifiyer != null)
         {
             identifiyer.gameObject.SetActive(true);
+        }
+    }
+
+    private void ResolveIdentifier()
+    {
+        if (identifiyer != null) return;
+
+        identifiyer = GetComponent<IdentifiyerEncaixe>();
+        if (identifiyer == null)
+        {
+            identifiyer = GetComponentInParent<IdentifiyerEncaixe>();
+        }
+        if (identifiyer == null)
+        {
+            identifiyer = GetComponentInChildren<IdentifiyerEncaixe>();
         }
     }
 
@@ -23,9 +35,28 @@ public class EncaixeBase : MonoBehaviour
     /// </summary>
     public void MiniGameScrew()
     {
-        if (identifiyer == null || ScrewPrefab == null) return;
+        ResolveIdentifier();
 
-        // Limpa e prepara a lista de verifica��o se estiver vazia ou desalinhada
+        if (identifiyer == null)
+        {
+            Debug.LogError($"[EncaixeBase] Não foi possível localizar um IdentifiyerEncaixe em '{gameObject.name}'.");
+            return;
+        }
+
+        if (ScrewPrefab == null)
+        {
+            Debug.LogError($"[EncaixeBase] ScrewPrefab não foi atribuído em '{gameObject.name}'.");
+            return;
+        }
+
+        if (identifiyer.ScrewsPositions == null || identifiyer.ScrewsPositions.Count == 0)
+        {
+            Debug.LogWarning($"[EncaixeBase] '{identifiyer.name}' não tem ScrewsPositions configurados.");
+            return;
+        }
+
+        Debug.Log("Tentou Spawnar");
+
         if (identifiyer.CompletedScrews.Count != identifiyer.ScrewsPositions.Count)
         {
             identifiyer.CompletedScrews.Clear();
@@ -35,22 +66,22 @@ public class EncaixeBase : MonoBehaviour
             }
         }
 
-        // Instancia os conectores passando os alvos e seus respectivos �ndices
         for (int i = 0; i < identifiyer.ScrewsPositions.Count; i++)
         {
             Transform posAlvo = identifiyer.ScrewsPositions[i];
-            GameObject objConector = Instantiate(ScrewPrefab);
+            if (posAlvo == null) continue;
 
-            // Posiciona um pouco acima do slot inicial
+            GameObject objConector = Instantiate(ScrewPrefab);
             objConector.transform.position = posAlvo.position + new Vector3(0f, 1.5f, 0f);
 
-            // Configura a refer�ncia no componente Conector
             if (objConector.TryGetComponent<Connector>(out var conector))
             {
                 conector.SetTarget(posAlvo.position, posAlvo.eulerAngles);
                 conector.SetPlacement(identifiyer, i);
             }
         }
+
+        Debug.Log("Terminou de spawnar");
     }
 
     /// Notifica��o recebida do Conector ao ser totalmente encaixado.

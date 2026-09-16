@@ -7,7 +7,7 @@ public class IdentifiyerEncaixe : MonoBehaviour
     [SerializeField] private MeshFilter usedModel;
     [SerializeField] private Tipo Tipo = Tipo.CPU;
 
-    [Header("Compatibilidade de Pe�a")]
+    [Header("Compatibilidade de Peça")]
     [SerializeField] private List<string> acceptedPieceIDs = new List<string>();
     [SerializeField] private List<Tipo> acceptedTypes = new List<Tipo>();
 
@@ -15,7 +15,7 @@ public class IdentifiyerEncaixe : MonoBehaviour
     [SerializeField] public List<Transform> ScrewsPositions = new List<Transform>();
     [SerializeField] public List<bool> CompletedScrews = new List<bool>();
 
-    [Header("Minigame / Intera��o")]
+    [Header("Minigame / Interação")]
     public bool hasScrewMiniStep = true;
 
     private void Start()
@@ -31,7 +31,7 @@ public class IdentifiyerEncaixe : MonoBehaviour
         }
     }
 
-    // Recebe a confirma��o de que um conector/parafuso espec�fico foi colocado
+    // Recebe a confirmação de que um conector/parafuso específico foi colocado
     public void NotifyConnectorPlaced(int index)
     {
         if (index >= 0 && index < CompletedScrews.Count)
