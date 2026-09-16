@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7168463893956148121}
   - component: {fileID: 4698103197023767223}
   - component: {fileID: 7492817104773912686}
+  - component: {fileID: 4457844824126343556}
   m_Layer: 6
   m_Name: Fan
   m_TagString: Untagged
@@ -51,6 +52,7 @@ MonoBehaviour:
   cur_state: 0
   myModel: {fileID: 6668088389311448892}
   LocaisEncaixe: []
+  interactWithStepChecker: 1
   snapDistance: 2.6
   surfaceLayerMask:
     serializedVersion: 2
@@ -78,6 +80,22 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.45028982, y: 0.19669615, z: 0.431032}
   m_Center: {x: 0, y: 0.028932175, z: 0}
+--- !u!114 &4457844824126343556
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5539327130407006703}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6dba34b605031b408626a482a25c357, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  zoomTarget: 1
+  cameraOffset: {x: 0, y: 10, z: 0}
+  targetEulerAngles: {x: 90, y: 0, z: 0}
+  focusedFOV: 50
 --- !u!1 &7531719802127335739
 GameObject:
   m_ObjectHideFlags: 0

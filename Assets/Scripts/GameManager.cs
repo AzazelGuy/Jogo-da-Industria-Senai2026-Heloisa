@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -18,6 +19,16 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
         }
 
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            UiController.Instance.ChangeActive(false);
+            Destroy(StepChecker.Instance.gameObject);
+        }
     }
     public void SelectObject(GameObject TargetObject)
     {

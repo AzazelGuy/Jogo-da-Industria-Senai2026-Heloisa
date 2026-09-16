@@ -1,0 +1,46 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class UiController : MonoBehaviour
+{
+    public static UiController Instance;
+
+    [SerializeField] private CanvasGroup _winUi;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+
+    private void OnEnable()
+    {
+        // Add event listener
+        StepChecker.OnTudoFeito += Completo;
+    }
+
+    private void OnDisable()
+    {
+        // Remove event listener
+        StepChecker.OnTudoFeito -= Completo;
+    }
+
+    private void Completo()
+    {
+        _winUi.gameObject.SetActive(true);
+    }
+
+    public void ChangeActive(bool b)
+    {
+        _winUi.gameObject.SetActive(b);
+    }
+    public CanvasGroup winUI => _winUi;
+}
