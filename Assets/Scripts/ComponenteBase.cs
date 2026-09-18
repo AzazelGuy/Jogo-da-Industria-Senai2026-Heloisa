@@ -1,5 +1,4 @@
 using UnityEngine;
-using SeriousGame.Hardware;
 using System.Collections.Generic;
 
 // A interface ISelectable permite que o GameManager ou o sistema de cliques interaja com este objeto

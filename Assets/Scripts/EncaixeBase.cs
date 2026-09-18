@@ -1,4 +1,3 @@
-using SeriousGame.Hardware;
 using UnityEngine;
 
 public class EncaixeBase : MonoBehaviour
