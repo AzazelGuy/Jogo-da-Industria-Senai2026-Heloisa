@@ -4,7 +4,7 @@
 
 
 
-Link de Download das Builds do Jogo : https://drive.google.com/drive/folders/144B-t-aOa6YAnzZUQ7aUC4BcU0w\_kOqH
+Link de Download das Builds do Jogo [aqui](https://drive.google.com/drive/folders/144B-t-aOa6YAnzZUQ7aUC4BcU0w_kOqH)
 
 Disponível:
 
