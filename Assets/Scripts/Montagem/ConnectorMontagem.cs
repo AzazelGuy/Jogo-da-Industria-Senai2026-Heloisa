@@ -1,50 +1,75 @@
 using UnityEngine;
 
 /// <summary>
-/// Tipos de intera��o e movimento para conectores, parafusos, alavancas e cabos.
+/// Tipos de interação e movimento para conectores, parafusos, alavancas e cabos.
 /// </summary>
 public enum ConnectorType
 {
     LinearMove,       // Movimento linear (parafusos, cabos)
-    Rotation,         // Rota��o (travas, alavancas)
-    AnimationTrigger, // Dispara uma anima��o espec�fica no Animator
-    InstantSnap       // Encaixe instant�neo
+    Rotation,         // Rotação (travas, alavancas)
+    AnimationTrigger, // Dispara uma animação específica no Animator
+    InstantSnap       // Encaixe instantâneo
 }
 
 /// <summary>
-/// Controla pe�as encaix�veis por clique cont�nuo ou a��o direta.
+/// Controla peças encaixáveis por clique contínuo (hold) ou ação direta,
+/// movendo/rotacionando o objeto até a posição/rotação desejada e notificando
+/// o IdentifiyerEncaixe / EncaixeBaseMontagem correspondente ao concluir.
 /// </summary>
 public class ConnectorMontagem : MonoBehaviour, ISelectable
 {
-    [Header("Configura��es do Conector")]
+    #region Campos Serializados - Configuração do Conector
+
+    [Header("Configurações do Conector")]
     [SerializeField, Tooltip("Modo de encaixe do conector.")]
     private ConnectorType tipoDeConexao = ConnectorType.LinearMove;
 
-    [SerializeField, Tooltip("Velocidade do movimento ou rota��o.")]
+    [SerializeField, Tooltip("Velocidade do movimento ou rotação.")]
     private float velocidade = 1.5f;
 
-    [SerializeField, Tooltip("Toler�ncia de dist�ncia/�ngulo para considerar o movimento conclu�do.")]
+    [SerializeField, Tooltip("Tolerância de distância/ângulo para considerar o movimento concluído.")]
     private float limiteDeConclusao = 0.01f;
 
-    [Header("Transforma��es de Destino")]
+    #endregion
+
+    #region Campos Serializados - Transformações de Destino
+
+    [Header("Transformações de Destino")]
     [SerializeField] private Vector3 posicaoDesejada;
     [SerializeField] private Vector3 rotacaoDesejadaEuler;
 
-    [Header("Anima��o (Se Tipo == AnimationTrigger)")]
+    #endregion
+
+    #region Campos Serializados - Animação
+
+    [Header("Animação (Se Tipo == AnimationTrigger)")]
     [SerializeField] private Animator animador;
     [SerializeField] private string nomeDoGatilhoAnimacao = "Connect";
 
-    [Header("Refer�ncias de Encaixe")]
+    #endregion
+
+    #region Campos Serializados - Referências de Encaixe
+
+    [Header("Referências de Encaixe")]
     [SerializeField] private IdentifiyerEncaixe encaixeIdentifiyer;
     [SerializeField] private EncaixeBaseMontagem encaixeBase;
     [SerializeField] private int indiceDoConector;
 
     [SerializeField] private AudioClip SFXPlaced;
 
+    #endregion
+
+    #region Estado Interno
+
     private bool estaConectado;
 
-    // --- M�todos de Configura��o Externa ---
+    #endregion
 
+    #region Configuração Externa (Setters)
+
+    /// <summary>
+    /// Define o encaixe de destino (via IdentifiyerEncaixe) e o índice do conector nesse encaixe.
+    /// </summary>
     public void SetPlacement(IdentifiyerEncaixe alvo, int indice = 0)
     {
         encaixeIdentifiyer = alvo;
@@ -52,6 +77,9 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
         indiceDoConector = indice;
     }
 
+    /// <summary>
+    /// Define o encaixe de destino (via EncaixeBaseMontagem) e o índice do conector nesse encaixe.
+    /// </summary>
     public void SetPlacement(EncaixeBaseMontagem alvo, int indice = 0)
     {
         encaixeBase = alvo;
@@ -59,19 +87,31 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
         indiceDoConector = indice;
     }
 
+    /// <summary>
+    /// Define apenas a posição de destino do conector.
+    /// </summary>
     public void SetTarget(Vector3 posicao)
     {
         posicaoDesejada = posicao;
     }
 
+    /// <summary>
+    /// Define a posição e a rotação (em Euler) de destino do conector.
+    /// </summary>
     public void SetTarget(Vector3 posicao, Vector3 rotacaoEuler)
     {
         posicaoDesejada = posicao;
         rotacaoDesejadaEuler = rotacaoEuler;
     }
 
-    // --- L�gica de Intera��o ---
+    #endregion
 
+    #region Lógica de Interação
+
+    /// <summary>
+    /// Chamado continuamente enquanto o jogador mantém o clique sobre o conector.
+    /// Processa o tipo de conexão configurado até a conclusão.
+    /// </summary>
     public void OnHold()
     {
         if (estaConectado) return;
@@ -96,6 +136,9 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
         }
     }
 
+    /// <summary>
+    /// Move o conector linearmente em direção à posição desejada; conclui ao chegar perto o suficiente.
+    /// </summary>
     private void ProcessarMovimentoLinear()
     {
         transform.position = Vector3.MoveTowards(
@@ -110,6 +153,9 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
         }
     }
 
+    /// <summary>
+    /// Rotaciona o conector em direção à rotação desejada; conclui ao chegar perto o suficiente do ângulo alvo.
+    /// </summary>
     private void ProcessarRotacao()
     {
         Quaternion rotacaoAlvo = Quaternion.Euler(rotacaoDesejadaEuler);
@@ -125,6 +171,9 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
         }
     }
 
+    /// <summary>
+    /// Dispara o gatilho de animação configurado e conclui a conexão imediatamente.
+    /// </summary>
     private void ProcessarAnimacao()
     {
         if (animador != null && !string.IsNullOrEmpty(nomeDoGatilhoAnimacao))
@@ -134,13 +183,22 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
         ConcluirConexao();
     }
 
+    #endregion
+
+    #region Conclusão da Conexão
+
+    /// <summary>
+    /// Finaliza a conexão: ajusta a transformação final, toca o SFX, notifica o encaixe
+    /// (IdentifiyerEncaixe e/ou EncaixeBaseMontagem) e desativa o collider.
+    /// </summary>
     public void ConcluirConexao()
     {
         if (estaConectado) return;
 
         estaConectado = true;
         AudioManager.Instance.PlaySFX(SFXPlaced);
-        // Ajusta posi��o/rota��o final no encerramento
+
+        // Ajusta posição/rotação final no encerramento
         if (tipoDeConexao == ConnectorType.LinearMove)
         {
             transform.position = posicaoDesejada;
@@ -150,7 +208,7 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
             transform.localRotation = Quaternion.Euler(rotacaoDesejadaEuler);
         }
 
-        // 1. Notifica o IdentifiyerEncaixe (se assinalado)
+        // 1. Notifica o IdentifiyerEncaixe (se atribuído)
         if (encaixeIdentifiyer != null)
         {
             encaixeIdentifiyer.NotifyConnectorPlaced(indiceDoConector);
@@ -168,15 +226,21 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
             encaixeBase.OnConectorPlaced(indiceDoConector);
         }
 
-        // 3. Desativa o Collider para evitar intera��es p�s-encaixe
+        // 3. Desativa o Collider para evitar interações pós-encaixe
         if (TryGetComponent<Collider>(out var colisor))
         {
             colisor.enabled = false;
         }
     }
 
-    // --- M�todos da Interface ISelectable ---
+    #endregion
+
+    #region Implementação de ISelectable
+
+    // Este conector não usa seleção/duplo clique - apenas OnHold()
     public void OnSelect() { }
     public void OnDeselect() { }
     public void OnDoubleClick() { }
+
+    #endregion
 }

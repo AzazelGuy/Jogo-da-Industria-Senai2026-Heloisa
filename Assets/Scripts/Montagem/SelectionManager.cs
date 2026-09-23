@@ -1,9 +1,20 @@
 using UnityEngine;
 using TMPro;
 
+/// <summary>
+/// Detecta o objeto ISelectable sob o cursor via raycast e gerencia hover, seleção,
+/// duplo clique e hold (clique segurado), repassando as chamadas correspondentes
+/// da interface ISelectable.
+/// </summary>
 public class SelectionManager : MonoBehaviour
 {
+    #region Singleton
+
     public static SelectionManager Instance { get; private set; }
+
+    #endregion
+
+    #region Campos Serializados
 
     [Header("Raycast Settings")]
     [SerializeField] private LayerMask selectableLayer;
@@ -13,14 +24,22 @@ public class SelectionManager : MonoBehaviour
     [SerializeField] private float doubleClickThreshold = 0.3f;
     [SerializeField] private float holdThreshold = 0.5f;
 
+    #endregion
+
+    #region Estado Interno
+
     private Camera cachedCamera;
     private ISelectable currentSelected;
-    private ISelectable currentHovered; // Guarda a pe�a sendo focada no Hover
+    private ISelectable currentHovered; // Guarda a peça sendo focada no Hover
     private ISelectable heldObject;
 
     private float pointerDownTime;
     private float lastClickTime;
     private bool isHolding;
+
+    #endregion
+
+    #region Ciclo de Vida (Unity)
 
     private void Awake()
     {
@@ -41,8 +60,13 @@ public class SelectionManager : MonoBehaviour
         HandleInput();
     }
 
+    #endregion
+
+    #region Hover
+
     /// <summary>
-    /// Processa o estado de passagem de mouse (Hover) continuamente a cada frame.
+    /// Processa o estado de passagem de mouse (Hover) continuamente a cada frame,
+    /// disparando OnPointerEnter/OnPointerExit e atualizando o texto de nome na UI.
     /// </summary>
     private void HandleHover()
     {
@@ -70,6 +94,14 @@ public class SelectionManager : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Input (Clique, Hold, Duplo Clique)
+
+    /// <summary>
+    /// Processa o clique do mouse: detecta início/fim do clique, hold (segurar)
+    /// e duplo clique, repassando para o ISelectable apropriado.
+    /// </summary>
     private void HandleInput()
     {
         if (Input.GetMouseButtonDown(0))
@@ -94,6 +126,7 @@ public class SelectionManager : MonoBehaviour
 
         if (Input.GetMouseButtonUp(0))
         {
+            // Só trata como clique/seleção se não tiver virado um "hold"
             if (!isHolding)
             {
                 ISelectable hitObj = GetSelectableUnderCursor();
@@ -119,6 +152,44 @@ public class SelectionManager : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Seleção
+
+    /// <summary>
+    /// Seleciona um novo objeto, desselecionando o anterior (se diferente).
+    /// </summary>
+    private void SelectObject(ISelectable selectable)
+    {
+        if (currentSelected != null && currentSelected != selectable)
+        {
+            currentSelected.OnDeselect();
+        }
+
+        currentSelected = selectable;
+        currentSelected.OnSelect();
+    }
+
+    /// <summary>
+    /// Desseleciona o objeto atualmente selecionado (caso exista).
+    /// </summary>
+    private void DeselectCurrent()
+    {
+        if (currentSelected != null)
+        {
+            currentSelected.OnDeselect();
+            currentSelected = null;
+        }
+    }
+
+    #endregion
+
+    #region Utilitários
+
+    /// <summary>
+    /// Dispara um raycast a partir da câmera principal na posição do mouse
+    /// e retorna o ISelectable encontrado (procurando também nos pais do collider atingido).
+    /// </summary>
     private ISelectable GetSelectableUnderCursor()
     {
         if (cachedCamera == null) CacheCamera();
@@ -133,28 +204,13 @@ public class SelectionManager : MonoBehaviour
         return null;
     }
 
-    private void SelectObject(ISelectable selectable)
-    {
-        if (currentSelected != null && currentSelected != selectable)
-        {
-            currentSelected.OnDeselect();
-        }
-
-        currentSelected = selectable;
-        currentSelected.OnSelect();
-    }
-
-    private void DeselectCurrent()
-    {
-        if (currentSelected != null)
-        {
-            currentSelected.OnDeselect();
-            currentSelected = null;
-        }
-    }
-
+    /// <summary>
+    /// Atualiza a referência em cache para a câmera principal (Camera.main).
+    /// </summary>
     private void CacheCamera()
     {
         cachedCamera = Camera.main;
     }
+
+    #endregion
 }

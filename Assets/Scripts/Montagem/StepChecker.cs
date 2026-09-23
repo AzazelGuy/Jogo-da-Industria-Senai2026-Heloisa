@@ -2,36 +2,62 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Informa√ß√µes de uma pe√ßa requerida para a montagem, configur√°vel no Inspector.
+/// </summary>
 [System.Serializable]
 public class StepPieceInfo
 {
-    [Tooltip("ID da peÁa cadastrado na SOPieceData ou myID do ComponenteBaseMontagem.")]
+    [Tooltip("ID da pe√ßa cadastrado na SOPieceData ou myID do ComponenteBaseMontagem.")]
     public string pieceID;
 
-    [Tooltip("DescriÁ„o opcional ou nome amig·vel para exibiÁ„o em UI.")]
+    [Tooltip("Descri√ß√£o opcional ou nome amig√°vel para exibi√ß√£o em UI.")]
     public string pieceName;
 
-    [Tooltip("Indica se esta peÁa È obrigatÛria para considerar o computador totalmente montado.")]
+    [Tooltip("Indica se esta pe√ßa √© obrigat√≥ria para considerar o computador totalmente montado.")]
     public bool isRequired = true;
 }
 
+/// <summary>
+/// Controla o progresso geral da montagem: registra pe√ßas colocadas, valida se
+/// a montagem foi conclu√≠da (considerando tamb√©m os parafusos/conectores de cada pe√ßa)
+/// e dispara os eventos correspondentes para a UI/l√≥gica do jogo.
+/// </summary>
 public class StepChecker : MonoBehaviour
 {
+    #region Singleton
+
     public static StepChecker Instance { get; private set; }
 
-    [Header("ConfiguraÁıes de Requisitos de PeÁas")]
-    [Tooltip("Lista com as peÁas que fazem parte da montagem (a ordem na lista n„o impede a montagem em ordens diferentes).")]
+    #endregion
+
+    #region Campos Serializados
+
+    [Header("Configura√ß√µes de Requisitos de Pe√ßas")]
+    [Tooltip("Lista com as pe√ßas que fazem parte da montagem (a ordem na lista n√£o impede a montagem em ordens diferentes).")]
     [SerializeField] private List<StepPieceInfo> pecasRequeridas = new List<StepPieceInfo>();
 
     [Header("Registro de Progresso")]
-    [Tooltip("Lista de componentes que j· foram posicionados na bancada/gabinete.")]
+    [Tooltip("Lista de componentes que j√° foram posicionados na bancada/gabinete.")]
     [SerializeField] private List<ComponenteBaseMontagem> pecasColocadas = new List<ComponenteBaseMontagem>();
 
-    // Eventos para atualizaÁ„o de UI / LÛgica de Jogo
+    #endregion
+
+    #region Eventos
+
+    // Eventos para atualiza√ß√£o de UI / L√≥gica de Jogo
     public event Action<ComponenteBaseMontagem> OnPiecePlaced;
     public static event Action OnTudoFeito;
 
+    #endregion
+
+    #region Propriedades P√∫blicas
+
     public IReadOnlyList<ComponenteBaseMontagem> PecasColocadas => pecasColocadas;
+
+    #endregion
+
+    #region Ciclo de Vida (Unity)
 
     private void Awake()
     {
@@ -46,42 +72,52 @@ public class StepChecker : MonoBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        Instance = null;
+    }
+
+    #endregion
+
+    #region Registro de Pe√ßas
 
     /// <summary>
-    /// Registra que uma peÁa foi encaixada e valida se a montagem foi finalizada.
+    /// Registra que uma pe√ßa foi encaixada e valida se a montagem foi finalizada.
     /// </summary>
     public void RegisterPiecePlaced(ComponenteBaseMontagem peca)
     {
         if (peca == null || pecasColocadas.Contains(peca)) return;
 
         pecasColocadas.Add(peca);
-        Debug.Log($"[StepChecker] PeÁa '{peca.myID}' encaixada ({pecasColocadas.Count} peÁas no total).");
+        Debug.Log($"[StepChecker] Pe√ßa '{peca.myID}' encaixada ({pecasColocadas.Count} pe√ßas no total).");
 
         OnPiecePlaced?.Invoke(peca);
 
         if (IsComputerFullyAssembled())
         {
-            Debug.Log("[StepChecker] O Computador est· totalmente montado!");
+            Debug.Log("[StepChecker] O Computador est√° totalmente montado!");
             OnTudoFeito?.Invoke();
         }
     }
 
+    #endregion
+
+    #region Valida√ß√£o de Montagem
+
     /// <summary>
-    /// Verifica se todas as peÁas da lista (ou da cena) foram encaixadas.
-    /// </summary>
-    /// <summary>
-    /// Verifica se todas as peÁas da lista (ou da cena) foram encaixadas E se seus parafusos foram concluÌdos.
+    /// Verifica se todas as pe√ßas da lista (ou da cena) foram encaixadas E se seus parafusos
+    /// foram conclu√≠dos.
     /// </summary>
     public bool IsComputerFullyAssembled()
     {
-        // 1. Se houver lista de peÁas requeridas configurada no Inspector:
+        // 1. Se houver lista de pe√ßas requeridas configurada no Inspector:
         if (pecasRequeridas != null && pecasRequeridas.Count > 0)
         {
             foreach (var req in pecasRequeridas)
             {
                 if (!req.isRequired) continue;
 
-                // Altera para verificar 'IsFullyAssembledWithScrews' em vez de apenas 'IsPlaced'
+                // Verifica 'IsFullyAssembledWithScrews' em vez de apenas 'IsPlaced'
                 bool encontradaEInstalada = pecasColocadas.Exists(p => p != null && p.myID == req.pieceID && p.IsFullyAssembledWithScrews);
                 if (!encontradaEInstalada)
                 {
@@ -91,7 +127,7 @@ public class StepChecker : MonoBehaviour
             return true;
         }
 
-        // 2. Fallback: Se a lista estiver vazia, verifica se TODAS as peÁas na cena foram colocadas e parafusadas
+        // 2. Fallback: Se a lista estiver vazia, verifica se TODAS as pe√ßas na cena foram colocadas e parafusadas
         ComponenteBaseMontagem[] todasAsPecas = FindObjectsByType<ComponenteBaseMontagem>(FindObjectsSortMode.None);
         if (todasAsPecas.Length == 0) return false;
 
@@ -106,8 +142,13 @@ public class StepChecker : MonoBehaviour
         return true;
     }
 
+    #endregion
+
+    #region Progresso de Conectores
+
     /// <summary>
-    /// Progresso de conectores (parafusos)
+    /// Avalia o progresso de parafusos/conectores de um encaixe espec√≠fico e,
+    /// caso todos estejam conclu√≠dos, verifica se a montagem inteira foi finalizada.
     /// </summary>
     public void CheckConnectorProgress(IdentifiyerEncaixe encaixe)
     {
@@ -129,8 +170,5 @@ public class StepChecker : MonoBehaviour
         }
     }
 
-    private void OnDestroy()
-    {
-        Instance = null;
-    }
+    #endregion
 }

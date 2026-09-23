@@ -3,64 +3,93 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// Estados possÌveis para o movimento da c‚mera.
+/// Estados poss√≠veis para o movimento da c√¢mera.
 /// </summary>
 public enum CameraState
 {
-    Overview,   // Vis„o geral da bancada
-    Moving,     // Em transiÁ„o suave
-    Focused     // Focada em uma peÁa/parafuso
+    Overview,   // Vis√£o geral da bancada
+    Moving,     // Em transi√ß√£o suave
+    Focused     // Focada em uma pe√ßa/parafuso
 }
 
 /// <summary>
-/// Gerenciador do movimento, rotaÁ„o e aproximaÁ„o (zoom) da c‚mera principal.
+/// Gerenciador do movimento, rota√ß√£o e aproxima√ß√£o (zoom) da c√¢mera principal.
+/// Controla transi√ß√µes suaves entre a vis√£o geral da bancada e o foco em pe√ßas,
+/// al√©m de aplicar um leve "edge pan" (parallax) baseado na posi√ß√£o do mouse.
 /// </summary>
 [RequireComponent(typeof(Camera))]
 public class CameraControllerMontagem : MonoBehaviour
 {
+    #region Singleton
+
     public static CameraControllerMontagem instance;
 
-    [Header("ConfiguraÁıes de Movimento")]
-    [SerializeField, Tooltip("DuraÁ„o da transiÁ„o da c‚mera em segundos.")]
+    #endregion
+
+    #region Campos Serializados - Movimento
+
+    [Header("Configura√ß√µes de Movimento")]
+    [SerializeField, Tooltip("Dura√ß√£o da transi√ß√£o da c√¢mera em segundos.")]
     private float duracaoDaTransicao = 0.8f;
 
-    [SerializeField, Tooltip("Curva de suavizaÁ„o da animaÁ„o da c‚mera.")]
+    [SerializeField, Tooltip("Curva de suaviza√ß√£o da anima√ß√£o da c√¢mera.")]
     private AnimationCurve curvaDeTransicao = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
-    [Header("ConfiguraÁıes de Edge Pan (Parallax do Mouse)")]
+    #endregion
+
+    #region Campos Serializados - Edge Pan (Parallax do Mouse)
+
+    [Header("Configura√ß√µes de Edge Pan (Parallax do Mouse)")]
     [SerializeField, Tooltip("Habilita/Desabilita o movimento leve quando o mouse vai para as bordas.")]
     private bool usarEdgePan = true;
 
-    [SerializeField, Tooltip("Intensidade m·xima de deslocamento em X e Y.")]
+    [SerializeField, Tooltip("Intensidade m√°xima de deslocamento em X e Y.")]
     private Vector2 limitePan = new Vector2(0.3f, 0.2f);
 
-    [SerializeField, Tooltip("Velocidade de suavizaÁ„o do movimento do pan.")]
+    [SerializeField, Tooltip("Velocidade de suaviza√ß√£o do movimento do pan.")]
     private float velocidadeSuavizacaoPan = 5f;
 
-    // ReferÍncias e Estados Internos
+    #endregion
+
+    #region Estado Interno
+
+    // Refer√™ncias e Estados Internos
     private Camera cameraAlvo;
     private CameraState estadoAtual = CameraState.Overview;
 
-    // TransformaÁıes Iniciais (Bancada)
+    // Transforma√ß√µes Iniciais (Bancada)
     private Vector3 posicaoInicial;
     private Quaternion rotacaoInicial;
     private float fovInicial;
 
-    // PosiÁıes Internas para o c·lculo do Pan
+    // Posi√ß√µes Internas para o c√°lculo do Pan
     private Vector3 posicaoBaseTarget;
     private Vector3 offsetPanAtual;
 
     // Controle de Corrotina
     private Coroutine rotinaDeTransicaoAtiva;
 
-    // Eventos C#
+    #endregion
+
+    #region Eventos
+
+    // Eventos C# disparados quando a c√¢mera termina de focar/voltar
     public event Action OnFocusReached;
     public event Action OnReturnToOverview;
 
+    #endregion
+
+    #region Propriedades P√∫blicas
+
     public CameraState CurrentState => estadoAtual;
+
+    #endregion
+
+    #region Ciclo de Vida (Unity)
 
     private void Awake()
     {
+        // Garante que exista apenas uma inst√¢ncia ativa do controlador de c√¢mera
         if (instance == null)
         {
             instance = this;
@@ -75,8 +104,17 @@ public class CameraControllerMontagem : MonoBehaviour
         SaveInitialTransform();
     }
 
+    private void LateUpdate()
+    {
+        AplicarEdgePan();
+    }
+
+    #endregion
+
+    #region API P√∫blica
+
     /// <summary>
-    /// Salva a posiÁ„o, rotaÁ„o e campo de vis„o (FOV) atuais como o ponto inicial.
+    /// Salva a posi√ß√£o, rota√ß√£o e campo de vis√£o (FOV) atuais como o ponto inicial.
     /// </summary>
     public void SaveInitialTransform()
     {
@@ -88,7 +126,7 @@ public class CameraControllerMontagem : MonoBehaviour
     }
 
     /// <summary>
-    /// Move a c‚mera suavemente para o ponto de foco informado.
+    /// Move a c√¢mera suavemente para o ponto de foco informado.
     /// </summary>
     public void FocusOnPiece(FocusPoint pontoDeFoco)
     {
@@ -106,7 +144,7 @@ public class CameraControllerMontagem : MonoBehaviour
     }
 
     /// <summary>
-    /// Retorna a c‚mera para a vis„o geral da bancada.
+    /// Retorna a c√¢mera para a vis√£o geral da bancada.
     /// </summary>
     public void ReturnToOverview()
     {
@@ -119,6 +157,13 @@ public class CameraControllerMontagem : MonoBehaviour
         });
     }
 
+    #endregion
+
+    #region Transi√ß√£o de C√¢mera (Interno)
+
+    /// <summary>
+    /// Interrompe uma transi√ß√£o em andamento (se houver) e inicia uma nova.
+    /// </summary>
     private void IniciarTransicao(Vector3 posicaoAlvo, Quaternion rotacaoAlvo, float fovAlvo, Action aoConcluir)
     {
         if (rotinaDeTransicaoAtiva != null)
@@ -130,6 +175,10 @@ public class CameraControllerMontagem : MonoBehaviour
         rotinaDeTransicaoAtiva = StartCoroutine(RotinaDeTransicao(posicaoAlvo, rotacaoAlvo, fovAlvo, aoConcluir));
     }
 
+    /// <summary>
+    /// Corrotina que interpola posi√ß√£o, rota√ß√£o e FOV ao longo do tempo,
+    /// usando a curva de suaviza√ß√£o configurada.
+    /// </summary>
     private IEnumerator RotinaDeTransicao(Vector3 posicaoAlvo, Quaternion rotacaoAlvo, float fovAlvo, Action aoConcluir)
     {
         Vector3 posicaoInicio = posicaoBaseTarget;
@@ -151,6 +200,7 @@ public class CameraControllerMontagem : MonoBehaviour
             yield return null;
         }
 
+        // Garante que os valores finais fiquem exatamente nos alvos (evita erro de arredondamento)
         posicaoBaseTarget = posicaoAlvo;
         transform.rotation = rotacaoAlvo;
         cameraAlvo.fieldOfView = fovAlvo;
@@ -159,13 +209,13 @@ public class CameraControllerMontagem : MonoBehaviour
         aoConcluir?.Invoke();
     }
 
-    private void LateUpdate()
-    {
-        AplicarEdgePan();
-    }
+    #endregion
+
+    #region Edge Pan (Interno)
 
     /// <summary>
-    /// Aplica o deslocamento sutil de c‚mera baseado na posiÁ„o do mouse relativa ao centro da tela.
+    /// Aplica o deslocamento sutil de c√¢mera baseado na posi√ß√£o do mouse relativa ao centro da tela.
+    /// N√£o √© aplicado durante transi√ß√µes (estado Moving).
     /// </summary>
     private void AplicarEdgePan()
     {
@@ -175,18 +225,20 @@ public class CameraControllerMontagem : MonoBehaviour
             return;
         }
 
-        // Normaliza a posiÁ„o do mouse na tela de -1 atÈ 1 (onde (0,0) È o centro)
+        // Normaliza a posi√ß√£o do mouse na tela de -1 at√© 1 (onde (0,0) √© o centro)
         float mouseXNormalizado = Mathf.Clamp((Input.mousePosition.x / Screen.width - 0.5f) * 2f, -1f, 1f);
         float mouseYNormalizado = Mathf.Clamp((Input.mousePosition.y / Screen.height - 0.5f) * 2f, -1f, 1f);
 
-        // Converte para offset nos eixos locais da c‚mera
+        // Converte para offset nos eixos locais da c√¢mera
         Vector3 offsetDesejado = (transform.right * mouseXNormalizado * limitePan.x) +
                                  (transform.up * mouseYNormalizado * limitePan.y);
 
         // Interpola o offset suavemente
         offsetPanAtual = Vector3.Lerp(offsetPanAtual, offsetDesejado, Time.deltaTime * velocidadeSuavizacaoPan);
 
-        // Aplica a posiÁ„o final mantendo a base segura
+        // Aplica a posi√ß√£o final mantendo a base segura
         transform.position = posicaoBaseTarget + offsetPanAtual;
     }
+
+    #endregion
 }
