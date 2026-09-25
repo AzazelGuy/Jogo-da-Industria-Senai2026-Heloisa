@@ -4190,6 +4190,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 1287583005274165757, guid: 2f507bb33d343c14c90077b73c32e018, type: 3}
+      propertyPath: pecasColocadas.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1287583005274165757, guid: 2f507bb33d343c14c90077b73c32e018, type: 3}
       propertyPath: pecasRequeridas.Array.size
       value: 7
       objectReference: {fileID: 0}
