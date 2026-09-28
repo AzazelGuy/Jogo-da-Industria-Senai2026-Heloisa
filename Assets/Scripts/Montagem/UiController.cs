@@ -45,6 +45,13 @@ public class UiController : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        if (SceneManager.GetActiveScene().name != "ModoMontagem")
+        {
+            Destroy(gameObject);
+        }
+    }
     private void OnEnable()
     {
         // Add event listener

@@ -43,6 +43,18 @@ public class GameManager : MonoBehaviour
             UiController.Instance.ChangeActive(false);
             Destroy(StepChecker.Instance.gameObject);
         }
+        if (SceneManager.GetActiveScene().name != "ModoMontagem")
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    public void OnDestroy()
+    {
+        if (Instance != null)
+        {
+            Instance = null;
+        }
     }
 
     #endregion

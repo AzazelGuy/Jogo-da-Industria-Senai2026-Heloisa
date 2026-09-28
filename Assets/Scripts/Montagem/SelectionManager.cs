@@ -1,5 +1,6 @@
-using UnityEngine;
 using TMPro;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Detecta o objeto ISelectable sob o cursor via raycast e gerencia hover, seleção,
@@ -58,8 +59,11 @@ public class SelectionManager : MonoBehaviour
     {
         HandleHover();
         HandleInput();
+        if (SceneManager.GetActiveScene().name != "ModoMontagem")
+        {
+            Destroy(gameObject);
+        }
     }
-
     #endregion
 
     #region Hover
