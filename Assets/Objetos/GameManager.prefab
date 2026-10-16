@@ -1,0 +1,89 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1663440999521879855
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7715476797481383690}
+  - component: {fileID: 6979494283598020057}
+  - component: {fileID: 1287583005274165757}
+  m_Layer: 0
+  m_Name: GameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7715476797481383690
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1663440999521879855}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 2.31378, y: -0.44633, z: 5.74}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6979494283598020057
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1663440999521879855}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a7b6b91018214e4e9dec122631b9f79, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1287583005274165757
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1663440999521879855}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e9f0f076ab6fae42b11372b123fa636, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pecasRequeridas:
+  - pieceID: pc_Motherboard
+    pieceName: "Placa M\xE3e"
+    isRequired: 1
+  - pieceID: pc_CPU
+    pieceName: Processador
+    isRequired: 1
+  - pieceID: pc_SSD
+    pieceName: SSD
+    isRequired: 1
+  - pieceID: pc_Fan
+    pieceName: Cooler
+    isRequired: 1
+  - pieceID: pc_Ram1
+    pieceName: Memoria Ram
+    isRequired: 1
+  - pieceID: pc_Ram2
+    pieceName: Memoria Ram
+    isRequired: 1
+  - pieceID: pc_Fonte
+    pieceName: Fonte de Energia
+    isRequired: 1
+  - pieceID: pc_GPU
+    pieceName: "Placa de V\xEDdeo"
+    isRequired: 1
+  pecasColocadas:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
