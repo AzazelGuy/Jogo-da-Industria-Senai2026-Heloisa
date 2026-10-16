@@ -435,6 +435,127 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 55332212}
   m_CullTransparentMesh: 1
+--- !u!1 &60907954
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 60907957}
+  - component: {fileID: 60907956}
+  - component: {fileID: 60907955}
+  m_Layer: 0
+  m_Name: Directional Light
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &60907955
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 60907954}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Version: 3
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_LightLayerMask: 1
+  m_RenderingLayers: 1
+  m_CustomShadowLayers: 0
+  m_ShadowLayerMask: 1
+  m_ShadowRenderingLayers: 1
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+--- !u!108 &60907956
+Light:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 60907954}
+  m_Enabled: 1
+  serializedVersion: 11
+  m_Type: 1
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Intensity: 2.11
+  m_Range: 10
+  m_SpotAngle: 30
+  m_InnerSpotAngle: 21.80208
+  m_CookieSize: 10
+  m_Shadows:
+    m_Type: 0
+    m_Resolution: -1
+    m_CustomResolution: -1
+    m_Strength: 1
+    m_Bias: 0.05
+    m_NormalBias: 0.4
+    m_NearPlane: 0.2
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingLayerMask: 1
+  m_Lightmapping: 4
+  m_LightShadowCasterMode: 0
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
+  m_ShadowRadius: 0
+  m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
+--- !u!4 &60907957
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 60907954}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
+  m_LocalPosition: {x: 99.31504, y: 0, z: 174.95445}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
 --- !u!1 &106726500
 GameObject:
   m_ObjectHideFlags: 0
@@ -7508,12 +7629,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 13c49b9c1f2e2af4197744efbe97d854, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pecaAtiva:
-    idPeca: 
-    nomePeca: 
-    iconePeca: {fileID: 0}
-    imagemFichaCanva: {fileID: 0}
-    modelo3DGabinete: {fileID: 0}
+  pecaAtiva: {fileID: 0}
 --- !u!1 &2058575021
 GameObject:
   m_ObjectHideFlags: 0
@@ -10314,6 +10430,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6202456982279092032}
   - component: {fileID: 968031698072146772}
+  - component: {fileID: 6202456982279092033}
   m_Layer: 0
   m_Name: Light
   m_TagString: Untagged
@@ -10353,12 +10470,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1c451bbfb47934478f8c35e76d2d7cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dadosDaPeca:
-    idPeca: 9
-    nomePeca: Tampa de Vidro
-    iconePeca: {fileID: 21300000, guid: c96809d3ee0edb447ba27fbb7d5c0653, type: 3}
-    imagemFichaCanva: {fileID: 685041302}
-    modelo3DGabinete: {fileID: 2940972634988090262}
+  dadosDaPeca: {fileID: 0}
   tempoDesaparecer: 0.2
 --- !u!64 &2940972634988090265
 MeshCollider:
@@ -12243,12 +12355,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1c451bbfb47934478f8c35e76d2d7cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dadosDaPeca:
-    idPeca: 7
-    nomePeca: Processador
-    iconePeca: {fileID: 21300000, guid: 85911dda3e6e189448218582b608fff0, type: 3}
-    imagemFichaCanva: {fileID: 1146550434}
-    modelo3DGabinete: {fileID: 4776656643841631650}
+  dadosDaPeca: {fileID: 0}
   tempoDesaparecer: 0.2
 --- !u!64 &4776656643841631652
 MeshCollider:
@@ -12684,12 +12791,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1c451bbfb47934478f8c35e76d2d7cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dadosDaPeca:
-    idPeca: 4
-    nomePeca: Fonte 500W
-    iconePeca: {fileID: 21300000, guid: 62887a0c889c6ad49ad7e0f0fe16915d, type: 3}
-    imagemFichaCanva: {fileID: 40236415}
-    modelo3DGabinete: {fileID: 5339483214043930554}
+  dadosDaPeca: {fileID: 0}
   tempoDesaparecer: 0.2
 --- !u!64 &5339483214043930556
 MeshCollider:
@@ -13424,12 +13526,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1c451bbfb47934478f8c35e76d2d7cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dadosDaPeca:
-    idPeca: 6
-    nomePeca: RAM 8GB (Slot 2)
-    iconePeca: {fileID: 21300000, guid: 9eaf9eb60d233b34694d0e7b793a4392, type: 3}
-    imagemFichaCanva: {fileID: 594692040}
-    modelo3DGabinete: {fileID: 6080576536176754108}
+  dadosDaPeca: {fileID: 0}
   tempoDesaparecer: 0.2
 --- !u!64 &6080576536176754110
 MeshCollider:
@@ -13535,6 +13632,29 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2905877628849248021}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6202456982279092033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2925171171759123971}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Version: 3
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_LightLayerMask: 1
+  m_RenderingLayers: 1
+  m_CustomShadowLayers: 0
+  m_ShadowLayerMask: 1
+  m_ShadowRenderingLayers: 1
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
 --- !u!4 &6265081166422676464
 Transform:
   m_ObjectHideFlags: 0
@@ -13766,12 +13886,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1c451bbfb47934478f8c35e76d2d7cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dadosDaPeca:
-    idPeca: 5
-    nomePeca: RAM 8GB (Slot 1)
-    iconePeca: {fileID: 21300000, guid: 9eaf9eb60d233b34694d0e7b793a4392, type: 3}
-    imagemFichaCanva: {fileID: 1736720556}
-    modelo3DGabinete: {fileID: 6721535138126381487}
+  dadosDaPeca: {fileID: 0}
   tempoDesaparecer: 0.2
 --- !u!64 &6721535138126381489
 MeshCollider:
@@ -14045,12 +14160,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1c451bbfb47934478f8c35e76d2d7cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dadosDaPeca:
-    idPeca: 1
-    nomePeca: GTX 1050 Ti
-    iconePeca: {fileID: 21300000, guid: 046923f7ccf8f1c44ac45d31fb7b17bf, type: 3}
-    imagemFichaCanva: {fileID: 278184872}
-    modelo3DGabinete: {fileID: 7444524516526090880}
+  dadosDaPeca: {fileID: 0}
   tempoDesaparecer: 0.2
 --- !u!64 &7444524516526090882
 MeshCollider:
@@ -14735,12 +14845,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1c451bbfb47934478f8c35e76d2d7cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dadosDaPeca:
-    idPeca: 2
-    nomePeca: Cooler CPU
-    iconePeca: {fileID: 21300000, guid: ea3cdd1caabf935499e59c435c093f7c, type: 3}
-    imagemFichaCanva: {fileID: 1926194591}
-    modelo3DGabinete: {fileID: 8168520049009716729}
+  dadosDaPeca: {fileID: 0}
   tempoDesaparecer: 0.2
 --- !u!64 &8168520049009716731
 MeshCollider:
@@ -14776,12 +14881,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1c451bbfb47934478f8c35e76d2d7cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dadosDaPeca:
-    idPeca: 
-    nomePeca: 
-    iconePeca: {fileID: 0}
-    imagemFichaCanva: {fileID: 0}
-    modelo3DGabinete: {fileID: 0}
+  dadosDaPeca: {fileID: 0}
   tempoDesaparecer: 0.2
 --- !u!4 &8175266877824270335
 Transform:
@@ -15363,12 +15463,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1c451bbfb47934478f8c35e76d2d7cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dadosDaPeca:
-    idPeca: 8
-    nomePeca: SSD 480GB
-    iconePeca: {fileID: 21300000, guid: b921996782d01724ab033ef51362f1ce, type: 3}
-    imagemFichaCanva: {fileID: 327747448}
-    modelo3DGabinete: {fileID: 9037700755875798967}
+  dadosDaPeca: {fileID: 0}
   tempoDesaparecer: 0.2
 --- !u!64 &9037700755875798969
 MeshCollider:
@@ -15493,12 +15588,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1c451bbfb47934478f8c35e76d2d7cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dadosDaPeca:
-    idPeca: 3
-    nomePeca: "Placa M\xE3e ATX"
-    iconePeca: {fileID: 21300000, guid: 62827d8b2ecbea943b7cd2c3f0ba9bf4, type: 3}
-    imagemFichaCanva: {fileID: 15271337}
-    modelo3DGabinete: {fileID: 9080738803796558744}
+  dadosDaPeca: {fileID: 0}
   tempoDesaparecer: 0.2
 --- !u!64 &9080738803796558746
 MeshCollider:
@@ -15670,3 +15760,4 @@ SceneRoots:
   - {fileID: 953733156}
   - {fileID: 610886839}
   - {fileID: 1655942944}
+  - {fileID: 60907957}

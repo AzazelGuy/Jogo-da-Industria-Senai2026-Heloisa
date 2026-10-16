@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [System.Serializable]
-public class PieceData
+public class PieceData : ScriptableObject
 {
     [Header("Identificação da Peça")]
     public string idPeca;               // Ex: "GPU_1050TI_DEF"

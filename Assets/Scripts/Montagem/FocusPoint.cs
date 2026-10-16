@@ -1,29 +1,47 @@
 using UnityEngine;
 
+/// <summary>
+/// Define um ponto de foco para o CameraControllerMontagem: informa a posi√ß√£o, rota√ß√£o
+/// e FOV (zoom) que a c√¢mera deve assumir ao focar nesta pe√ßa ou no encaixe associado.
+/// </summary>
 public class FocusPoint : MonoBehaviour
 {
-    public enum TargetType
-    {
-        Socket, // Foca usando a referÍncia/posiÁ„o do slot de encaixe
-        Piece   // Foca na prÛpria peÁa
-    }
-
-    [Header("ConfiguraÁıes do Zoom")]
-    [Tooltip("Define se o foco ser· calculado a partir da peÁa ou do local de encaixe.")]
-    public TargetType zoomTarget = TargetType.Piece;
-
-    [Header("ConfiguraÁıes de Foco")]
-    [Tooltip("Offset relativo ‡ posiÁ„o do alvo (PeÁa ou Socket) para a c‚mera.")]
-    public Vector3 cameraOffset = new Vector3(0, 0.15f, -0.25f);
-
-    [Tooltip("RotaÁ„o desejada da c‚mera ao focar.")]
-    public Vector3 targetEulerAngles = new Vector3(30f, 0f, 0f);
-
-    [Tooltip("Campo de vis„o (FOV) para aproximar a imagem.")]
-    public float focusedFOV = 35f;
+    #region Tipos
 
     /// <summary>
-    /// Retorna a posiÁ„o do mundo onde a c‚mera ficar·, ajustada com base no alvo escolhido.
+    /// Define a partir de qual transform o foco deve ser calculado.
+    /// </summary>
+    public enum TargetType
+    {
+        Socket, // Foca usando a refer√™ncia/posi√ß√£o do slot de encaixe
+        Piece   // Foca na pr√≥pria pe√ßa
+    }
+
+    #endregion
+
+    #region Campos Serializados
+
+    [Header("Configura√ß√µes do Zoom")]
+    [Tooltip("Define se o foco ser√° calculado a partir da pe√ßa ou do local de encaixe.")]
+    public TargetType zoomTarget = TargetType.Piece;
+
+    [Header("Configura√ß√µes de Foco")]
+    [Tooltip("Offset relativo √† posi√ß√£o do alvo (Pe√ßa ou Socket) para a c√¢mera.")]
+    public Vector3 cameraOffset = new Vector3(0, 0.15f, -0.25f);
+
+    [Tooltip("Rota√ß√£o desejada da c√¢mera ao focar.")]
+    public Vector3 targetEulerAngles = new Vector3(30f, 0f, 0f);
+
+    [Tooltip("Campo de vis√£o (FOV) para aproximar a imagem.")]
+    public float focusedFOV = 35f;
+
+    #endregion
+
+    #region API P√∫blica
+
+    /// <summary>
+    /// Retorna a posi√ß√£o do mundo onde a c√¢mera ficar√°, ajustada com base no alvo escolhido
+    /// (pe√ßa ou socket) e no offset configurado.
     /// </summary>
     public Vector3 GetWorldTargetPosition(Transform targetOverride = null)
     {
@@ -34,10 +52,17 @@ public class FocusPoint : MonoBehaviour
         return baseTransform.position + baseTransform.TransformDirection(cameraOffset);
     }
 
+    /// <summary>
+    /// Retorna a rota√ß√£o desejada da c√¢mera ao focar neste ponto.
+    /// </summary>
     public Quaternion GetWorldTargetRotation()
     {
         return Quaternion.Euler(targetEulerAngles);
     }
+
+    #endregion
+
+    #region Gizmos (Editor)
 
     private void OnDrawGizmosSelected()
     {
@@ -46,4 +71,6 @@ public class FocusPoint : MonoBehaviour
         Gizmos.DrawWireSphere(worldPos, 0.03f);
         Gizmos.DrawLine(transform.position, worldPos);
     }
+
+    #endregion
 }
