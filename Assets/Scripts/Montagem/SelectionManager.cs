@@ -57,12 +57,17 @@ public class SelectionManager : MonoBehaviour
 
     private void Update()
     {
-        HandleHover();
-        HandleInput();
         if (SceneManager.GetActiveScene().name != "ModoMontagem")
         {
             Destroy(gameObject);
         }
+        if (PauseMenuActions.instance.Paused)
+        {
+            return;
+        }
+        HandleHover();
+        HandleInput();
+        
     }
     #endregion
 

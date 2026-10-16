@@ -3,13 +3,20 @@ using UnityEngine.SceneManagement;
 
 public class SceneTransitionManager : MonoBehaviour
 {
+    [SerializeField] AudioClip select;
     public void ModoMontagem()
     {
-        SceneManager.LoadScene("ModoMontagem");
+        PlayAudio();
+        LoadingScreen.Carregar("ModoMontagem");
     }
 
+    public void PlayAudio()
+    {
+        AudioManager.Instance.PlaySFX(select);
+    }
     public void ModoReparo()
     {
-        SceneManager.LoadScene("Fase1");
+        PlayAudio();
+        LoadingScreen.Carregar("Fase1");
     }
 }

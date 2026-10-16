@@ -1,7 +1,7 @@
 using System;
-using System.Collections.Generic;
-using UnityEngine;
+using System.Collections;
 using TMPro;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
@@ -18,15 +18,11 @@ public class UiController : MonoBehaviour
 
     #region Campos Serializados
 
-    [SerializeField] private CanvasGroup _winUi;
     [SerializeField] private TextMeshProUGUI nameText;
+    [SerializeField] private CanvasGroup _winUi;
+    [SerializeField] private float fadeDuration = 1.5f;
 
-    #endregion
-
-    #region Propriedades Públicas
-
-    public CanvasGroup winUI => _winUi;
-    public TextMeshProUGUI textNameUI => nameText;
+    private Coroutine _fadeRoutine;
 
     #endregion
 
@@ -79,31 +75,62 @@ public class UiController : MonoBehaviour
     /// </summary>
     private void Completo()
     {
-        _winUi.gameObject.SetActive(true);
+        ChangeActive(true);
+    }
+
+    /// <summary>
+    /// Mostra (com fade) ou esconde (instantâneo) a tela de vitória.
+    /// </summary>
+    public void ChangeActive(bool b)
+    {
+        if (_fadeRoutine != null) StopCoroutine(_fadeRoutine);
+
+        if (b)
+        {
+            _fadeRoutine = StartCoroutine(FadeIn(_winUi, fadeDuration));
+        }
+        else
+        {
+            _winUi.alpha = 0f;
+            _winUi.gameObject.SetActive(false);
+        }
+    }
+
+    private IEnumerator FadeIn(CanvasGroup group, float duration)
+    {
+        group.alpha = 0f;
+        group.interactable = false;
+        group.blocksRaycasts = false;
+        group.gameObject.SetActive(true);
+
+        float t = 0f;
+        while (t < duration)
+        {
+            t += Time.unscaledDeltaTime; // funciona mesmo com timeScale = 0
+            group.alpha = Mathf.Clamp01(t / duration);
+            yield return null;
+        }
+
+        group.alpha = 1f;
+        group.interactable = true;
+        group.blocksRaycasts = true;
+        _fadeRoutine = null;
     }
 
     #endregion
 
     #region API Pública
-
-    /// <summary>
-    /// Ativa ou desativa a tela de vitória manualmente.
-    /// </summary>
-    public void ChangeActive(bool b)
-    {
-        _winUi.gameObject.SetActive(b);
-    }
-
     /// <summary>
     /// Carrega a cena do menu principal e limpa as instâncias persistentes
     /// (UiController e StepChecker).
     /// </summary>
     public void ReturntoMainMenu()
     {
-        SceneManager.LoadScene("MenuInicial");
+        LoadingScreen.Carregar("MenuInicial");
         Destroy(gameObject);
         Destroy(StepChecker.Instance.gameObject);
     }
 
     #endregion
+    public TextMeshProUGUI textNameUI => nameText;
 }

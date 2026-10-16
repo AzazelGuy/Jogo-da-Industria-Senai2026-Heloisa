@@ -19,6 +19,10 @@ public class SplashScreen : MonoBehaviour
     public float tempoExibicao = 2f;
     public float tempoPausa = 0.5f;
 
+    [Header("Pular")]
+    public float tempoFadePulo = 0.35f;
+    private bool pulando = false;
+
     [Header("Posição de Entrada")]
     public float posicaoInicialY = -1080f;
 
@@ -72,19 +76,43 @@ public class SplashScreen : MonoBehaviour
         if (logoSesi != null) logoSesi.gameObject.SetActive(false);
         yield return new WaitForSeconds(tempoPausa);
 
-        // --- 3. ETAPA MENU INICIAL (Subida + Fade Out Fundo Preto) ---
-        float tempo = 0f;
-        Vector2 posInicial = new Vector2(0, posicaoInicialY);
+        // --- 3. ETAPA MENU INICIAL ---
+        yield return StartCoroutine(TransicaoParaMenu(tempoFade));
+    }
+
+    /// <summary>
+    /// Pula as logos e vai direto pro menu com um fade rápido.
+    /// </summary>
+    public void Pular()
+    {
+        if (pulando || introFinalizada) return;
+        pulando = true;
+
+        // Mata a sequência E os FadeObjeto filhos
+        StopAllCoroutines();
+
+        if (logoEstudio != null) logoEstudio.gameObject.SetActive(false);
+        if (logoSesi != null) logoSesi.gameObject.SetActive(false);
+
+        StartCoroutine(TransicaoParaMenu(tempoFadePulo));
+    }
+
+    IEnumerator TransicaoParaMenu(float duracao)
+    {
+        // Parte dos valores ATUAIS, então funciona mesmo se pular no meio da subida
+        float fundoInicial = fundoPreto != null ? fundoPreto.alpha : 0f;
+        float menuAlphaInicial = menuInicialGroup != null ? menuInicialGroup.alpha : 0f;
+        Vector2 posInicial = menuInicialRect != null ? menuInicialRect.anchoredPosition : Vector2.zero;
         Vector2 posFinal = Vector2.zero;
 
-        while (tempo < tempoFade)
+        float tempo = 0f;
+        while (tempo < duracao)
         {
             tempo += Time.deltaTime;
-            float progresso = tempo / tempoFade;
+            float progresso = Mathf.Clamp01(tempo / duracao);
 
-            if (fundoPreto != null) fundoPreto.alpha = Mathf.Lerp(1f, 0f, progresso);
-
-            if (menuInicialGroup != null) menuInicialGroup.alpha = Mathf.Lerp(0f, 1f, progresso);
+            if (fundoPreto != null) fundoPreto.alpha = Mathf.Lerp(fundoInicial, 0f, progresso);
+            if (menuInicialGroup != null) menuInicialGroup.alpha = Mathf.Lerp(menuAlphaInicial, 1f, progresso);
             if (menuInicialRect != null) menuInicialRect.anchoredPosition = Vector2.Lerp(posInicial, posFinal, progresso);
 
             yield return null;

@@ -146,8 +146,8 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
     private void Update()
     {
-        if (isPlaced) return;
-
+        if (isPlaced || PauseMenuActions.instance.Paused) return;
+        
         if (cur_state == State.Selected)
         {
             // Ignora o primeiro frame após a seleção para não processar o mesmo clique duas vezes

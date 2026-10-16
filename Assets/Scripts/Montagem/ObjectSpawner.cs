@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Instancia uma lista de objetos, cada um na posiÃ§Ã£o correspondente
-/// (pelo Ã­ndice) na lista de pontos de spawn.
+/// Instancia uma lista de objetos, cada um na posição correspondente
+/// (pelo índice) na lista de pontos de spawn.
 /// </summary>
 public class ObjectSpawner : MonoBehaviour
 {
@@ -24,8 +24,8 @@ public class ObjectSpawner : MonoBehaviour
 
     private void Start()
     {
-        // ATENÃ‡ÃƒO: assume que ObjectstoSpawn e PlacesToSpawn tÃªm o mesmo tamanho;
-        // se PlacesToSpawn tiver menos elementos, isso lanÃ§arÃ¡ um IndexOutOfRangeException.
+        // ATENÇÃO: assume que ObjectstoSpawn e PlacesToSpawn têm o mesmo tamanho;
+        // se PlacesToSpawn tiver menos elementos, isso lançará um IndexOutOfRangeException.
         foreach (GameObject obj in ObjectstoSpawn)
         {
             GameObject curobjt = Instantiate(obj, PlacesToSpawn[indice].transform.position, Quaternion.identity);

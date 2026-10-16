@@ -8,27 +8,21 @@ public class AtalhosTeclado : MonoBehaviour
 
     void Update()
     {
-        // 🔹 TECLA ESC
+        // Durante a intro: qualquer tecla/clique pula, e NADA mais é processado
+        if (splashScreen != null && splashScreen.EstaEmAndamento())
+        {
+            if (Input.anyKeyDown) splashScreen.Pular();
+            return;
+        }
+
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            // Ignora o comando caso a apresentação ainda esteja rodando
-            if (splashScreen != null && splashScreen.EstaEmAndamento())
-            {
-                return;
-            }
-
             if (controleMenu == null) return;
 
-            // Se estiver no menu de escolha de modos, volta para o menu inicial
             if (controleMenu.EstaNoMenuModos())
-            {
                 controleMenu.VoltarParaMenuInicial();
-            }
-            // Se estiver no menu inicial, fecha o jogo
             else
-            {
                 controleMenu.SairDoJogo();
-            }
         }
     }
 }
