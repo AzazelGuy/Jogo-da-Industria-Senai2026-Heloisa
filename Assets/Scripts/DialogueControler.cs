@@ -1,39 +1,47 @@
 using System.Collections;
+using System;
 using TMPro;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.UI;
-
-[System.Serializable]
-public class DialogueOption
-{
-    public string optionText; // Texto da escolha
-    public int nextPage;      // Õndice da prÛxima p·gina (-1 = fecha)
-    public bool IsGameRestart;
-    public bool IsGameClose;
-}
 
 [System.Serializable]
 public class DialoguePage
 {
-    [TextArea] public string text;      // Texto da fala
-    public Sprite portrait;             // Retrato opcional
-    public DialogueOption[] options;    // Null ou vazio = di·logo linear
-    public bool isStop;                 //Flag de parar o dialogo
-    public bool ChangeSong = false;                 //Flag de Trocar a Musica
+    [TextArea] public string text;   // Texto da fala
+    public Sprite portrait;          // Retrato opcional
+    public bool isStop;              // Se true, o di√°logo termina nesta p√°gina
+    public bool ChangeSong = false;  // Se true, troca a m√∫sica ao exibir a p√°gina
     public AudioClip music;
 }
-
 
 public class DialogueControler : MonoBehaviour
 {
     public static DialogueControler instance;
+
+    public static event Action OnDialogueEnd;
+
+    [Header("UI")]
+    public GameObject dialogueGroup; // PAI do HUD de di√°logo (arrasta aqui no Inspector)
+    public TMP_Text dialogueText;
+
+    [Header("Typing")]
+    public float typingSpeed = 0.04f;
+    public AudioClip blip;
+
+    private DialoguePage[] pages;
+    private int currentPage = 0;
+
+    private bool isTyping = false;
+    private string fullText;
+    private Coroutine typingCoroutine;
+
+    private KeyCode confirmKey = KeyCode.E;
+
     void Awake()
     {
         if (instance == null)
         {
             instance = this;
-            DontDestroyOnLoad(instance);
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -41,81 +49,49 @@ public class DialogueControler : MonoBehaviour
         }
     }
 
-    [Header("UI")]
-    public GameObject dialoguePanel;
-    public GameObject dialogueGroup; // <- Arrasta o PAI HUD aqui no Inspector
-    public TMP_Text dialogueText;
-
-    [Header("Typing")] //Efeito de digitaÁ„o + audio
-    public float typingSpeed = 0.04f;
-    public AudioClip blip;
-
-    [Header("Choices")] //Botıes de escolha
-    public GameObject choicesPanel;
-    public RectTransform[] choicePositions; // posiÁ„o das caixas de escolha
-    public GameObject cursor;              // imagem do cursor que se move
-
-    private DialoguePage[] pages; //Paginas
-    private int currentPage = 0; //Atual, baseado em array
-
-    private bool isTyping = false; //Se ele est· adicionando ou n„o texto
-    private string fullText; //Referencia ao texto completo da pagina
-    private Coroutine typingCoroutine; //Corotina que controla o efeito de digtaÁ„o
-
-    private DialogueOption[] currentOptions; //Referencia as opÁıes
-    private int selectedIndex = 0; //qual esta selecionada
-    private bool inChoices = false; //O jogador est· em perguna
-
-    private KeyCode confirmKey = KeyCode.E; // tecla para confirmar
-
     private void Start()
     {
         dialogueGroup.SetActive(false);
     }
+
     // =========================
-    // Iniciar di·logo
+    // Iniciar di√°logo
     // =========================
     public void StartDialogue(DialoguePage[] dialoguePages)
     {
         pages = dialoguePages;
         currentPage = 0;
-        dialogueGroup.SetActive(true); // <- era dialoguePanel
+        dialogueGroup.SetActive(true);
         ShowPage(currentPage);
         Time.timeScale = 0f;
     }
 
     // =========================
-    // Mostrar p·gina
+    // Mostrar p√°gina
     // =========================
     void ShowPage(int pageIndex)
     {
         DialoguePage page = pages[pageIndex];
         fullText = page.text;
-        if (page.ChangeSong == true)
+
+        if (page.ChangeSong)
         {
             AudioManager.Instance.PlayMusic(page.music);
         }
-        // Resetar escolhas
-        choicesPanel.SetActive(false);
-        inChoices = false;
 
-        // Digitar texto
         if (typingCoroutine != null) StopCoroutine(typingCoroutine);
-        typingCoroutine = StartCoroutine(TypeText(page));
-
-        // Preparar opÁıes
-        currentOptions = page.options;
+        typingCoroutine = StartCoroutine(TypeText());
     }
 
     // =========================
     // Digitar letra por letra
     // =========================
-    IEnumerator TypeText(DialoguePage page)
+    IEnumerator TypeText()
     {
         isTyping = true;
         dialogueText.text = "";
 
-        foreach (char c in fullText) //Adicionar charactere AO texto atual da tela.
+        foreach (char c in fullText)
         {
             dialogueText.text += c;
 
@@ -126,113 +102,42 @@ public class DialogueControler : MonoBehaviour
         }
 
         isTyping = false;
-
-        // Se a p·gina tem opÁıes, ativa-as
-        if (page.options != null && page.options.Length > 0)
-        {
-            SetupChoices(page.options);
-        }
-        else if (page.isStop)
-        {
-            // Aqui a p·gina È "final", mas n„o tem opÁıes
-            // Ent„o apenas esperamos o jogador apertar a tecla para acabar
-            inChoices = false; // sÛ pra garantir
-        }
-
     }
 
     // =========================
-    // Configura escolhas e cursor
-    // =========================
-    void SetupChoices(DialogueOption[] options)
-    {
-        currentOptions = options;
-        choicesPanel.SetActive(true);
-        selectedIndex = 0;
-        inChoices = true;
-        UpdateCursor();
-    }
-
-    // =========================
-    // Atualiza posiÁ„o do cursor
-    // =========================
-    void UpdateCursor()
-    {
-        if (cursor != null && choicePositions.Length > 0)
-        {
-            int index = Mathf.Clamp(selectedIndex, 0, choicePositions.Length - 1);
-            cursor.transform.position = choicePositions[index].position;
-        }
-    }
-
-    // =========================
-    // LÛgica de update (input)
+    // Input
     // =========================
     void Update()
     {
-        if (!dialoguePanel.activeSelf) return;
+        if (!dialogueGroup.activeSelf) return;
+        if (!Input.GetKeyDown(confirmKey)) return;
 
-        // Pular animaÁ„o letra por letra
-        if (isTyping && Input.GetKeyDown(confirmKey))
+        if (isTyping)
         {
             SkipTyping();
-            return;
         }
-
-        // Se est· em escolhas
-        if (inChoices)
+        else if (pages[currentPage].isStop)
         {
-            if (Input.GetKeyDown(KeyCode.UpArrow))
-            {
-                selectedIndex = (selectedIndex - 1 + currentOptions.Length) % currentOptions.Length;
-                UpdateCursor();
-            }
-            else if (Input.GetKeyDown(KeyCode.DownArrow))
-            {
-                selectedIndex = (selectedIndex + 1) % currentOptions.Length;
-                UpdateCursor();
-            }
-            else if (Input.GetKeyDown(confirmKey))
-            {
-                OnOptionSelected(currentOptions[selectedIndex]);
-            }
-
+            EndDialogue();
         }
         else
         {
-            // AvanÁar p·gina linear
-            if (!isTyping && Input.GetKeyDown(confirmKey))
-            {
-                if (pages[currentPage].isStop) //Essa È a 219
-                {
-                    EndDialogue(); // termina di·logo se essa p·gina for "stop"
-                }
-                else
-                {
-                    NextPage(); // sen„o vai para a prÛxima
-                }
-            }
+            NextPage();
         }
     }
 
     // =========================
-    // Pular digitaÁ„o
+    // Pular digita√ß√£o
     // =========================
     void SkipTyping()
     {
         if (typingCoroutine != null) StopCoroutine(typingCoroutine);
         dialogueText.text = fullText;
         isTyping = false;
-
-        // Ativa escolhas se houver
-        if (currentOptions != null && currentOptions.Length > 0)
-        {
-            SetupChoices(currentOptions);
-        }
     }
 
     // =========================
-    // PrÛxima p·gina linear
+    // Pr√≥xima p√°gina
     // =========================
     void NextPage()
     {
@@ -248,49 +153,18 @@ public class DialogueControler : MonoBehaviour
     }
 
     // =========================
-    // Quando o jogador escolhe uma opÁ„o
-    // =========================
-    void OnOptionSelected(DialogueOption option)
-    {
-        inChoices = false;
-        choicesPanel.SetActive(false);
-
-        if (option.nextPage < 0)
-        {
-            EndDialogue();
-        }
-        else
-        {
-            if (option.IsGameRestart)
-            {
-                //GetComponent<GameRestart>().Restart();
-            }
-            else if (option.IsGameClose)
-            {
-                // Fecha o Jogo
-                Application.Quit();
-
-                // Para Ele no editor
-#if UNITY_EDITOR
-                EditorApplication.isPlaying = false;
-#endif
-            }
-            currentPage = option.nextPage;
-            ShowPage(currentPage);
-        }
-    }
-
-
-    // =========================
-    // Fecha di·logo
+    // Fecha di√°logo
     // =========================
     void EndDialogue()
-    {
-        dialogueText.text = "";
-        currentOptions = null;
-        inChoices = false;
-        Time.timeScale = 1f;
+{
+    if (typingCoroutine != null) StopCoroutine(typingCoroutine);
+    isTyping = false;
+    dialogueText.text = "";
+    Time.timeScale = 1f;
+    dialogueGroup.SetActive(false);
 
-        dialoguePanel.SetActive(false); // Esconde o grupo todo incluindo cursor
-    }
+    OnDialogueEnd?.Invoke(); // avisa quem estiver ouvindo
+}
+
+private void OnDestroy() => instance = null;
 }
