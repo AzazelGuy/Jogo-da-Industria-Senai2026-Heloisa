@@ -45,11 +45,10 @@ public class DialogueControler : MonoBehaviour
     public GameObject dialoguePanel;
     public GameObject dialogueGroup; // <- Arrasta o PAI HUD aqui no Inspector
     public TMP_Text dialogueText;
-    public Image portraitImage;
 
     [Header("Typing")] //Efeito de digitação + audio
     public float typingSpeed = 0.04f;
-    public AudioSource blip;
+    public AudioClip blip;
 
     [Header("Choices")] //Botões de escolha
     public GameObject choicesPanel;
@@ -92,17 +91,6 @@ public class DialogueControler : MonoBehaviour
     {
         DialoguePage page = pages[pageIndex];
         fullText = page.text;
-
-        // Retrato
-        if (page.portrait != null)
-        {
-            portraitImage.gameObject.SetActive(true);
-            portraitImage.sprite = page.portrait;
-        }
-        else
-        {
-            portraitImage.gameObject.SetActive(false);
-        }
         if (page.ChangeSong == true)
         {
             AudioManager.Instance.PlayMusic(page.music);
@@ -132,7 +120,7 @@ public class DialogueControler : MonoBehaviour
             dialogueText.text += c;
 
             if (blip != null && c != ' ')
-                blip.Play();
+                AudioManager.Instance.PlaySFXRandomPitch(blip);
 
             yield return new WaitForSecondsRealtime(typingSpeed);
         }

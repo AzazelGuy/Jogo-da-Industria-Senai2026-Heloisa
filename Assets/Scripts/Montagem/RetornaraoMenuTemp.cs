@@ -7,7 +7,7 @@ public class RetornaraoMenuTemp : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.X))
         {
-            SceneManager.LoadScene("MenuInicial");
+            LoadingScreen.Carregar("MenuInicial");
         }
     }
 }
