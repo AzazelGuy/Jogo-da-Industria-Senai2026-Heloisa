@@ -67,6 +67,12 @@ public class TrocaCursor : MonoBehaviour
             return;
         }
 
+        // Botão esquerdo está sendo segurado
+        if (Input.GetMouseButton(0))
+        {
+            MostrarCursorFechado();
+            return;
+        }
         // =====================================================
         // SE O MOUSE ESTÁ SOBRE ALGUM OBJETO
         // =====================================================
@@ -86,13 +92,6 @@ public class TrocaCursor : MonoBehaviour
             {
                 cursorSelecionado = "Chave";
                 MostrarCursorChave();
-                return;
-            }
-
-            // Botão esquerdo está sendo segurado
-            if (Input.GetMouseButton(0))
-            {
-                MostrarCursorFechado();
                 return;
             }
 
