@@ -11,6 +11,7 @@ public class AudioManager : MonoBehaviour
     [Header("Sources")]
     [SerializeField] private AudioSource musicSource;
     [SerializeField] private AudioSource sfxSource;
+    [SerializeField] private AudioSource voiceSource;
 
     // ─── Volumes (0-1) ───────────────────────────────────────────
     [Header("Volumes iniciais")]
@@ -71,6 +72,7 @@ public class AudioManager : MonoBehaviour
         // Cria AudioSources automaticamente se não forem atribuídos no Inspector
         if (musicSource == null) musicSource = CreateSource("MusicSource", true);
         if (sfxSource == null) sfxSource = CreateSource("SFXSource", false);
+        if (voiceSource == null) voiceSource = CreateSource("VoiceSource", false);
 
         // Aplica volumes iniciais
         musicSource.volume = musicVolume;
@@ -225,6 +227,25 @@ public class AudioManager : MonoBehaviour
         if (clips == null || clips.Length == 0) return;
         PlaySFX(clips[Random.Range(0, clips.Length)]);
     }
+
+    #endregion
+
+    // ─────────────────────────────────────────────────────────────
+    #region Voz
+
+    public bool IsVoicePlaying => voiceSource.isPlaying;
+
+    /// <summary>Toca uma fala numa fonte própria (pode ser interrompida com StopVoice). Usa o volume de SFX.</summary>
+    public void PlayVoice(AudioClip clip)
+    {
+        if (clip == null || sfxMuted) return;
+
+        voiceSource.clip = clip;
+        voiceSource.volume = sfxVolume;
+        voiceSource.Play();
+    }
+
+    public void StopVoice() => voiceSource.Stop();
 
     #endregion
 
