@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// Representa um ponto de encaixe físico na cena que possui um IdentifiyerEncaixe associado.
 /// Responsável por instanciar os parafusos/conectores (minigame) quando a peça é colocada
-/// e por repassar a notificação de conclusão ao IdentifiyerEncaixe/StepChecker.
+/// e por repassar a notificação de conclusão ao IdentifiyerEncaixe (que avisa o StepChecker).
 /// </summary>
 public class EncaixeBaseMontagem : MonoBehaviour
 {
@@ -116,6 +116,8 @@ public class EncaixeBaseMontagem : MonoBehaviour
 
     /// <summary>
     /// Notificação recebida do Conector ao ser totalmente encaixado.
+    /// O IdentifiyerEncaixe já se encarrega de avisar o StepChecker,
+    /// então não é preciso chamá-lo aqui (antes causava checagem duplicada).
     /// </summary>
     /// <param name="index">Índice do conector na lista de posições.</param>
     public void OnConectorPlaced(int index)
@@ -123,12 +125,6 @@ public class EncaixeBaseMontagem : MonoBehaviour
         if (identifiyer != null)
         {
             identifiyer.NotifyConnectorPlaced(index);
-        }
-
-        // Notifica o StepChecker para validar o avanço de etapa
-        if (StepChecker.Instance != null && identifiyer != null)
-        {
-            StepChecker.Instance.CheckConnectorProgress(identifiyer);
         }
     }
 

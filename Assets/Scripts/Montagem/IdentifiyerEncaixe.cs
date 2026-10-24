@@ -3,8 +3,8 @@ using UnityEngine;
 
 /// <summary>
 /// Representa um slot/encaixe onde uma peça (ComponenteBaseMontagem) pode ser instalada.
-/// Controla a compatibilidade com peças/tipos aceitos, a visibilidade do socket na cena
-/// e o progresso dos parafusos/conectores associados a este encaixe.
+/// Controla a compatibilidade com peças/tipos aceitos, a visibilidade do socket na cena,
+/// a ocupação do slot e o progresso dos parafusos/conectores associados a este encaixe.
 /// </summary>
 public class IdentifiyerEncaixe : MonoBehaviour
 {
@@ -39,20 +39,76 @@ public class IdentifiyerEncaixe : MonoBehaviour
 
     #endregion
 
+    #region Estado Interno
+
+    // Peça que está ocupando este slot (apenas em runtime, não serializado).
+    private ComponenteBaseMontagem ocupante;
+
+    // Última visibilidade pedida por outros scripts (null = ninguém pediu ainda).
+    // A visibilidade real também depende de a sequência de etapas já ter liberado este slot.
+    private bool? ultimaSolicitacaoVisivel;
+
+    #endregion
+
     #region Propriedades Públicas
 
     public List<string> AcceptedPieceIDs => acceptedPieceIDs;
     public List<Tipo> AcceptedTypes => acceptedTypes;
     public string getID => myID;
     public bool hasScrew => hasScrewMiniStep;
+    public bool IsOccupied => ocupante != null;
 
     #endregion
 
     #region Ciclo de Vida (Unity)
 
+    private void OnEnable()
+    {
+        StepChecker.OnEtapaMudou += HandleEtapaMudou;
+
+        // Se alguém já pediu visibilidade antes, reaplica considerando a etapa atual
+        if (ultimaSolicitacaoVisivel.HasValue)
+        {
+            AplicarVisibilidade();
+        }
+    }
+
+    private void OnDisable()
+    {
+        StepChecker.OnEtapaMudou -= HandleEtapaMudou;
+    }
+
     private void Start()
     {
         UpdateModel(null);
+    }
+
+    private void HandleEtapaMudou(int indice, EtapaMontagem etapa)
+    {
+        if (ultimaSolicitacaoVisivel.HasValue)
+        {
+            AplicarVisibilidade();
+        }
+    }
+
+    #endregion
+
+    #region Ocupação do Slot
+
+    /// <summary>
+    /// Retorna true se o slot já está ocupado por uma peça diferente da informada.
+    /// </summary>
+    public bool IsOccupiedByOther(ComponenteBaseMontagem piece)
+    {
+        return ocupante != null && ocupante != piece;
+    }
+
+    /// <summary>
+    /// Marca a peça informada como ocupante deste slot.
+    /// </summary>
+    public void Occupy(ComponenteBaseMontagem piece)
+    {
+        ocupante = piece;
     }
 
     #endregion
@@ -91,7 +147,7 @@ public class IdentifiyerEncaixe : MonoBehaviour
             }
         }
 
-        if (IsFullyAssembled())
+        if (IsFullyAssembled() && CameraControllerMontagem.instance != null)
         {
             CameraControllerMontagem.instance.ReturnToOverview();
         }
@@ -140,6 +196,19 @@ public class IdentifiyerEncaixe : MonoBehaviour
     /// </summary>
     public void SetSocketVisible(bool visible)
     {
+        ultimaSolicitacaoVisivel = visible;
+        AplicarVisibilidade();
+    }
+
+    /// <summary>
+    /// Aplica a visibilidade/colisão do socket: só fica ligado se foi pedido E se a sequência
+    /// de etapas já liberou este slot (ex.: o slot do cooler só aparece depois da pasta térmica).
+    /// </summary>
+    private void AplicarVisibilidade()
+    {
+        bool visible = ultimaSolicitacaoVisivel.GetValueOrDefault(false)
+            && (StepChecker.Instance == null || StepChecker.Instance.SlotLiberado(this));
+
         Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
         foreach (Renderer renderer in renderers)
         {
@@ -164,14 +233,15 @@ public class IdentifiyerEncaixe : MonoBehaviour
     #region Compatibilidade de Peças
 
     /// <summary>
-    /// Verifica se este encaixe aceita a peça informada, seja por ID exato,
-    /// por lista de IDs aceitos ou por tipo (quando não há IDs específicos configurados).
+    /// Verifica se este encaixe aceita a peça informada, seja por lista de IDs aceitos,
+    /// por ID igual ao do slot ou pelo tipo da peça (lista de tipos aceitos).
     /// </summary>
     public bool CanAcceptPiece(ComponenteBaseMontagem piece)
     {
         if (piece == null) return false;
 
         string pieceId = piece.myID;
+
         if (!string.IsNullOrEmpty(pieceId) && acceptedPieceIDs.Contains(pieceId))
         {
             return true;
@@ -182,29 +252,10 @@ public class IdentifiyerEncaixe : MonoBehaviour
             return true;
         }
 
-        if (piece.GetComponent<ComponenteBaseMontagem>() == null)
-        {
-            return false;
-        }
+        // Compara o tipo DA PEÇA (antes comparava o tipo do próprio slot, o que aceitava qualquer peça).
+        if (acceptedTypes.Count == 0) return false;
 
-        // NOTA: esta expressão sempre resulta em "null" (código morto/possível bug pré-existente).
-        // Mantido como estava - não foi um problema de codificação de caracteres, então não foi alterado.
-        SOPieceData data = piece.GetComponent<ComponenteBaseMontagem>().GetComponent<ComponenteBaseMontagem>() == null ? null : null;
-
-        if (data != null)
-        {
-            if (acceptedPieceIDs.Contains(data.ID))
-            {
-                return true;
-            }
-        }
-
-        if (acceptedTypes.Count == 0)
-        {
-            return string.IsNullOrEmpty(myID) == false && myID == pieceId;
-        }
-
-        return acceptedTypes.Contains(Tipo);
+        return piece.TipoPeca.HasValue && acceptedTypes.Contains(piece.TipoPeca.Value);
     }
 
     /// <summary>

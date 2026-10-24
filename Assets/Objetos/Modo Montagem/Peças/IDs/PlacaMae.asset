@@ -12,12 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b3fcbf59c0c42441ac767de0c63c77b, type: 3}
   m_Name: PlacaMae
   m_EditorClassIdentifier: 
-  ID: pc_Motherboard
-  Nome: "Placa M\xE3e"
+  ID: pc_Motherboard_P
+  Nome: "Placa M\xE3e Pequena"
   Descricao: 
   tipoDePeca: 2
-  cabosUsados: 
-  EncaixesUtilizados: 0100000002000000030000000400000006000000070000000800000009000000
   modelos: []
   materiais: []
   prefab:

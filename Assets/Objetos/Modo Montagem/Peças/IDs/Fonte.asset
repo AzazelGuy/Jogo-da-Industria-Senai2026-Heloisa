@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b3fcbf59c0c42441ac767de0c63c77b, type: 3}
   m_Name: Fonte
   m_EditorClassIdentifier: 
-  ID: pc_Fonte
+  ID: pc_Fonte_P
   Nome: Fonte de Energia
   Descricao: 
   tipoDePeca: 0

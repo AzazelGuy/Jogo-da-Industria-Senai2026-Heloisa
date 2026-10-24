@@ -47,9 +47,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622ba6d808cf6c445ac6bf574b284e9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  myID: pc_Motherboard
+  myID: Gabinete
   usedModel: {fileID: 3064874087395069751}
   Tipo: 2
+  acceptedPieceIDs: []
+  acceptedTypes: 
   ScrewsPositions: []
   CompletedScrews: 
   hasScrewMiniStep: 0

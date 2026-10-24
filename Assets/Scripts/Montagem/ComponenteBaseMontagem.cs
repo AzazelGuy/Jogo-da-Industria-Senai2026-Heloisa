@@ -62,6 +62,7 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
     private bool isSnapped = false;
     private bool isPlaced = false;
     private bool justSelected = false;
+    private bool inscritoNaCamera = false;
 
     private Renderer meshRenderer;
     private Material[] originalMaterials;
@@ -113,6 +114,11 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
     public string myID => InfoPeca != null ? InfoPeca.ID : "";
     public bool IsPlaced => isPlaced;
 
+    /// <summary>
+    /// Tipo da peça segundo a SOPieceData, ou null se a peça não tiver SOPieceData.
+    /// </summary>
+    public Tipo? TipoPeca => InfoPeca != null ? InfoPeca.tipoDePeca : (Tipo?)null;
+
     #endregion
 
     #region Ciclo de Vida (Unity)
@@ -127,27 +133,28 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
     private void OnEnable()
     {
-        // Inscreve-se no evento de retorno à visão geral para reexibir/ocultar os slots locais
-        if (CameraControllerMontagem.instance != null)
-            CameraControllerMontagem.instance.OnReturnToOverview += HandleReturnToOverview;
+        TrySubscribeToCamera();
     }
 
     private void OnDisable()
     {
-        if (CameraControllerMontagem.instance != null)
-            CameraControllerMontagem.instance.OnReturnToOverview -= HandleReturnToOverview;
+        UnsubscribeFromCamera();
     }
 
     private void Start()
     {
+        // Tenta de novo: no OnEnable a câmera pode ainda não ter feito o Awake dela.
+        TrySubscribeToCamera();
+
         FindSlot();
         SetLocalSlotsVisible(false);
     }
 
     private void Update()
     {
-        if (isPlaced || PauseMenuActions.instance.Paused) return;
-        
+        if (isPlaced) return;
+        if (PauseMenuActions.instance != null && PauseMenuActions.instance.Paused) return;
+
         if (cur_state == State.Selected)
         {
             // Ignora o primeiro frame após a seleção para não processar o mesmo clique duas vezes
@@ -164,6 +171,36 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
                 DropObject();
             }
         }
+    }
+
+    #endregion
+
+    #region Inscrição no Evento da Câmera
+
+    /// <summary>
+    /// Inscreve a peça no evento de retorno à visão geral (apenas uma vez).
+    /// </summary>
+    private void TrySubscribeToCamera()
+    {
+        if (inscritoNaCamera) return;
+
+        CameraControllerMontagem cam = CameraControllerMontagem.instance;
+        if (cam == null) return;
+
+        cam.OnReturnToOverview += HandleReturnToOverview;
+        inscritoNaCamera = true;
+    }
+
+    private void UnsubscribeFromCamera()
+    {
+        if (!inscritoNaCamera) return;
+
+        CameraControllerMontagem cam = CameraControllerMontagem.instance;
+        if (cam != null)
+        {
+            cam.OnReturnToOverview -= HandleReturnToOverview;
+        }
+        inscritoNaCamera = false;
     }
 
     #endregion
@@ -194,6 +231,14 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
     public void OnSelect()
     {
+        // Montagem em etapas: bloqueia a seleção de peças fora da sequência
+        if (!isPlaced && interactWithStepChecker && StepChecker.Instance != null
+            && !StepChecker.Instance.PodeColocarPeca(this, out string motivo))
+        {
+            StepChecker.Instance.NotificarBloqueio(motivo);
+            return;
+        }
+
         FindSlot();
         SelectPeca();
     }
@@ -305,6 +350,9 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
             cur_state = State.Normal;
             isPlaced = true;
 
+            // Reserva o slot para esta peça: outras peças (mesmo com o mesmo ID) vão escolher outro slot livre
+            targetSlot.Occupy(this);
+
             if (anim != null) anim.SetTrigger("OnDeselect");
 
             SetOutlineVisible(false);
@@ -347,12 +395,15 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
     }
 
     /// <summary>
-    /// Verifica se um slot pode ser usado por esta peça: não pode ser um slot que pertence
-    /// à própria peça, e se pertence a outra peça, essa peça precisa já estar colocada.
+    /// Verifica se um slot pode ser usado por esta peça: não pode estar ocupado por outra peça,
+    /// não pode pertencer à própria peça, e se pertence a outra peça, essa peça precisa já estar colocada.
     /// </summary>
     private bool IsSlotAvailableForUse(IdentifiyerEncaixe slot)
     {
         if (slot == null) return false;
+
+        // Slot já ocupado por outra peça: indisponível
+        if (slot.IsOccupiedByOther(this)) return false;
 
         ComponenteBaseMontagem parentPiece = slot.GetComponentInParent<ComponenteBaseMontagem>();
         if (parentPiece == this) return false;
@@ -366,7 +417,7 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
     }
 
     /// <summary>
-    /// Procura um slot compatível, primeiro na hierarquia atual (pais/filhos) e,
+    /// Procura um slot compatível e livre, primeiro na hierarquia atual (pais/filhos) e,
     /// se não encontrar, em toda a cena.
     /// </summary>
     private void FindSlot()
@@ -462,6 +513,14 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         {
             if (s != null)
             {
+                // Se o objeto faz parte de um slot, deixa o slot decidir (respeitando a sequência de etapas)
+                IdentifiyerEncaixe slotDoObjeto = s.GetComponentInParent<IdentifiyerEncaixe>();
+                if (slotDoObjeto != null)
+                {
+                    slotDoObjeto.SetSocketVisible(visible);
+                    continue;
+                }
+
                 Renderer r = s.GetComponent<Renderer>();
                 if (r != null) r.enabled = visible;
 

@@ -15,7 +15,7 @@ public enum Tipo
     Cabo
 }
 
-[CreateAssetMenu(fileName = "Peça", menuName = "Peças/ Nova Peça")]
+[CreateAssetMenu(fileName = "PeÃ§a", menuName = "PeÃ§as/ Nova PeÃ§a")]
 public class SOPieceData : ScriptableObject
 {
     public string ID;
@@ -23,14 +23,11 @@ public class SOPieceData : ScriptableObject
     [TextArea(3, 6)]
     public string Descricao;
 
-    //Utiliza-se LIST pois pode incluir variações e mais de 1
     public Tipo tipoDePeca;
 
+    //Utiliza-se LIST pois pode incluir variaÃ§Ãµes e mais de 1
     public List<Mesh> modelos;
     public List<Material> materiais;
 
     public List<GameObject> prefab;
-
-
-
 }

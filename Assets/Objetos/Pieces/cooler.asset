@@ -15,4 +15,5 @@ MonoBehaviour:
   idPeca: Cooler_01
   nomePeca: Cooler
   iconePeca: {fileID: 21300000, guid: ea3cdd1caabf935499e59c435c093f7c, type: 3}
-  cardEspecificacao: {fileID: 0}
+  imagemFichaCanva: {fileID: 0}
+  modelo3DGabinete: {fileID: 0}
