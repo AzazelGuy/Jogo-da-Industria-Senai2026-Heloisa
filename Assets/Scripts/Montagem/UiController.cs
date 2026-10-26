@@ -34,6 +34,12 @@ public class UiController : MonoBehaviour
     private int posItemAtual;
     private int posItemQnt;
 
+    [Header("Spawn de Peças da Caixa")]
+    [Tooltip("Ponto de referência na mesa onde a peça deve aparecer.")]
+    [SerializeField] private Transform pontoSpawnMesa;
+    [Tooltip("Painel/Canvas da UI da Caixa de Peças que deve fechar ao clicar.")]
+    [SerializeField] private GameObject painelCaixaUI;
+
     #endregion
 
     #region Ciclo de Vida (Unity)
@@ -93,6 +99,38 @@ public class UiController : MonoBehaviour
     private void OnDestroy()
     {
         Instance = null;
+    }
+
+    
+
+    /// <summary>
+    /// Chamado ao clicar no botão/ítem da peça na UI da caixa.
+    /// Spawna a peça na mesa com física e fecha o menu.
+    /// </summary>
+    public void SpawnarPecaNaMesa(GameObject prefabPeca)
+    {
+        if (prefabPeca == null) return;
+
+        // 1. Spawna a peça na posição da mesa (com rotação padrão ou do ponto)
+        Vector3 posicaoSpawn = pontoSpawnMesa != null ? pontoSpawnMesa.position : Vector3.zero;
+        Quaternion rotacaoSpawn = pontoSpawnMesa != null ? pontoSpawnMesa.rotation : Quaternion.identity;
+
+        GameObject novaPeca = Instantiate(prefabPeca, posicaoSpawn, rotacaoSpawn);
+
+        // 2. Garante que o Rigidbody está ativo com física caso precise
+        Rigidbody rb = novaPeca.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.isKinematic = false; // Permite que caia com física na mesa se desejar
+        }
+
+        // 3. Fecha a UI da caixa de peças
+        if (painelCaixaUI != null)
+        {
+            painelCaixaUI.SetActive(false);
+        }
+
+        Debug.Log($"[UiController] Peça {prefabPeca.name} spawnada na mesa e UI fechada.");
     }
 
     #endregion
@@ -169,6 +207,21 @@ public class UiController : MonoBehaviour
         LoadingScreen.Carregar("MenuInicial");
         Destroy(gameObject);
         Destroy(StepChecker.Instance.gameObject);
+    }
+
+    /// <summary>
+    /// Retorna o nome/ID da ferramenta atualmente selecionada na Hotbar.
+    /// </summary>
+    public string FerramentaSelecionadaAtual
+    {
+        get
+        {
+            if (nomeHotbarItens != null && posItemAtual >= 0 && posItemAtual < nomeHotbarItens.Length)
+            {
+                return nomeHotbarItens[posItemAtual];
+            }
+            return string.Empty;
+        }
     }
 
     #endregion

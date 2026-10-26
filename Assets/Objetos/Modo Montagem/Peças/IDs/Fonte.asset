@@ -18,4 +18,5 @@ MonoBehaviour:
   tipoDePeca: 0
   modelos: []
   materiais: []
-  prefab: []
+  prefab:
+  - {fileID: 3949002606416733140, guid: 00bffebdd27668c458c2cb476da5a944, type: 3}

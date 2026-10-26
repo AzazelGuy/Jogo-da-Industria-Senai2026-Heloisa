@@ -16,8 +16,7 @@ MonoBehaviour:
   Nome: Processador
   Descricao: 
   tipoDePeca: 0
-  cabosUsados: 
-  EncaixesUtilizados: 
   modelos: []
   materiais: []
-  prefab: []
+  prefab:
+  - {fileID: 5338569790181840518, guid: 9106e3e667cace240abf797850209215, type: 3}

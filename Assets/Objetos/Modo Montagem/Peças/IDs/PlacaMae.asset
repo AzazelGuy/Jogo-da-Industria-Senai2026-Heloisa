@@ -19,4 +19,4 @@ MonoBehaviour:
   modelos: []
   materiais: []
   prefab:
-  - {fileID: 0}
+  - {fileID: 7111040133705626347, guid: 189e6b3c62a244b47abf22e9f7971c75, type: 3}

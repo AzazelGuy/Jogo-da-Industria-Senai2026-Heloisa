@@ -12,12 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b3fcbf59c0c42441ac767de0c63c77b, type: 3}
   m_Name: Fan
   m_EditorClassIdentifier: 
-  ID: pc_Fan
+  ID: pc_Cooler
   Nome: Cooler
   Descricao: 
   tipoDePeca: 3
-  cabosUsados: 
-  EncaixesUtilizados: 
   modelos: []
   materiais: []
-  prefab: []
+  prefab:
+  - {fileID: 5539327130407006703, guid: 06b651c051b68494ea0ff61ae3693bb8, type: 3}
