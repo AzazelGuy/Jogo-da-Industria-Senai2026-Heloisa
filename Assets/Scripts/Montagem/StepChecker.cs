@@ -5,7 +5,7 @@ using UnityEngine;
 /// <summary>
 /// Informações de uma peça requerida para a montagem, configurável no Inspector.
 /// 
-/// 24/10 17:58 "Esses códigos são a prova viva que não há deus entre nós"
+/// 24/10 17:58 "Esses códigos são a prova viva que não há deus entre nós que não nos ama"
 /// </summary>
 [System.Serializable]
 public class StepPieceInfo

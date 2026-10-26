@@ -98,7 +98,7 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.3, y: 0.3, z: 0.3116749}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!1 &3359704290838121160
+--- !u!1 &2844155315445257431
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -106,48 +106,38 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2660834671894181435}
-  - component: {fileID: 9137671029903542072}
-  - component: {fileID: 3359607457002829992}
-  - component: {fileID: 5719287903801259963}
-  - component: {fileID: 2113923584127266831}
+  - component: {fileID: 3876561316285179629}
+  - component: {fileID: 824065011569383061}
+  - component: {fileID: 6417624234007358335}
   m_Layer: 6
-  m_Name: Pasta
+  m_Name: Model
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &2660834671894181435
+--- !u!4 &3876561316285179629
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3359704290838121160}
+  m_GameObject: {fileID: 2844155315445257431}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: -0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: 0.1604, y: 0, z: 0}
-  m_LocalScale: {x: 1.9312, y: 0.040498674, z: 1.9312}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7791320539043753046}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -90}
---- !u!33 &9137671029903542072
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3359704290838121160}
-  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
---- !u!23 &3359607457002829992
+  m_Father: {fileID: 2660834671894181435}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!23 &824065011569383061
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3359704290838121160}
+  m_GameObject: {fileID: 2844155315445257431}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -186,6 +176,48 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &6417624234007358335
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2844155315445257431}
+  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &3359704290838121160
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2660834671894181435}
+  - component: {fileID: 5719287903801259963}
+  - component: {fileID: 2113923584127266831}
+  m_Layer: 6
+  m_Name: Pasta
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2660834671894181435
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3359704290838121160}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: -0.7071068, w: 0.7071068}
+  m_LocalPosition: {x: 0.1604, y: 0, z: 0}
+  m_LocalScale: {x: 1.9312, y: 0.040498674, z: 1.9312}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 3876561316285179629}
+  m_Father: {fileID: 7791320539043753046}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -90}
 --- !u!65 &5719287903801259963
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -202,11 +234,11 @@ BoxCollider:
     m_Bits: 0
   m_LayerOverridePriority: 0
   m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_ProvidesContacts: 1
+  m_Enabled: 0
   serializedVersion: 3
-  m_Size: {x: 1.36, y: 2.000001, z: 1.22}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 1.6788201, y: 22.182432, z: 2.0250723}
+  m_Center: {x: 0, y: 10.091216, z: 0}
 --- !u!114 &2113923584127266831
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -222,7 +254,7 @@ MonoBehaviour:
   acaoID: pasta_termica
   pecaAlvo: {fileID: 9025448758983504731}
   indicadorDisponivel: {fileID: 0}
-  resultadoVisual: {fileID: 0}
+  resultadoVisual: {fileID: 2844155315445257431}
 --- !u!1 &5338569790181840518
 GameObject:
   m_ObjectHideFlags: 0
@@ -305,7 +337,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.5535319, y: 2.5835664, z: 2.6382189}
+  m_Size: {x: 0.5535319, y: 3.0843556, z: 3.3643875}
   m_Center: {x: 0, y: -0, z: 0}
 --- !u!1 &5430409597320629918
 GameObject:

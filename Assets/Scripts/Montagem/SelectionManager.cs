@@ -61,7 +61,7 @@ public class SelectionManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
-        if (PauseMenuActions.instance.Paused)
+        if (PauseMenuActions.instance != null && PauseMenuActions.instance.Paused)
         {
             return;
         }

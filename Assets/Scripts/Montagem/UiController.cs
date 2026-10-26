@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -24,6 +25,15 @@ public class UiController : MonoBehaviour
 
     private Coroutine _fadeRoutine;
 
+    [Header("HotBar")]
+
+    [SerializeField] RectTransform imgSelecionado;
+    [SerializeField] RectTransform[] posHotbarItens;
+    [SerializeField] string[] nomeHotbarItens;
+    [SerializeField] TextMeshProUGUI nomedoItemDisplay;
+    private int posItemAtual;
+    private int posItemQnt;
+
     #endregion
 
     #region Ciclo de Vida (Unity)
@@ -39,6 +49,9 @@ public class UiController : MonoBehaviour
         {
             Destroy(gameObject);
         }
+        posItemQnt = posHotbarItens.Count() - 1;
+        Debug.Log("Qnt de itens: " + posItemQnt.ToString());
+        AtualizarHotbar();
     }
 
     private void Update()
@@ -46,7 +59,24 @@ public class UiController : MonoBehaviour
         if (SceneManager.GetActiveScene().name != "ModoMontagem")
         {
             Destroy(gameObject);
+            return;
         }
+        float scroll = Input.mouseScrollDelta.y; // ou Input.GetAxis("Mouse ScrollWheel")
+
+        if (scroll > 0f)
+        {
+            // scroll pra cima
+            posItemAtual--;
+        }
+        else if (scroll < 0f)
+        {
+            // scroll pra baixo
+            posItemAtual++;
+        }
+
+        // faz a "meia volta" (wrap-around)
+        posItemAtual = (posItemAtual + posItemQnt) % posItemQnt;
+        AtualizarHotbar();
     }
     private void OnEnable()
     {
@@ -119,6 +149,16 @@ public class UiController : MonoBehaviour
 
     #endregion
 
+    #region Hotbar
+
+    private void AtualizarHotbar()
+    {
+        imgSelecionado.position = posHotbarItens[posItemAtual].position;
+        nomedoItemDisplay.text = nomeHotbarItens[posItemAtual];
+        return;
+    }
+    #endregion
+    
     #region API Pública
     /// <summary>
     /// Carrega a cena do menu principal e limpa as instâncias persistentes
