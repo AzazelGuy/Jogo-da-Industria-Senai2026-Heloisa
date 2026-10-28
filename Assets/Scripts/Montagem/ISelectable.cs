@@ -32,6 +32,11 @@ public interface ISelectable
     /// </summary>
     void OnHold() { }
 
+    /// <summary>
+    /// Chamado quando o botão direito é pressionado sobre o objeto (ou com ele na mão).
+    /// </summary>
+    void OnRightClick() { }
+
     #endregion
 
     #region Hover (Ponteiro do Mouse)

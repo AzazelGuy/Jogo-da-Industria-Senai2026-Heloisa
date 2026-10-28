@@ -37,6 +37,7 @@ public class SelectionManager : MonoBehaviour
     private float pointerDownTime;
     private float lastClickTime;
     private bool isHolding;
+    private bool ignorarCliqueAtual; // evita "clique fantasma" no mundo ao fechar a caixa de peças
 
     #endregion
 
@@ -66,8 +67,15 @@ public class SelectionManager : MonoBehaviour
             return;
         }
         HandleHover();
+
+        // Com a caixa de peças aberta, o mundo 3D não recebe cliques
+        if (CaixaPecasUi.Instance != null && CaixaPecasUi.Instance.IsOpen)
+        {
+            ignorarCliqueAtual = true;
+            return;
+        }
+
         HandleInput();
-        
     }
     #endregion
 
@@ -113,6 +121,22 @@ public class SelectionManager : MonoBehaviour
     /// </summary>
     private void HandleInput()
     {
+        // Depois de fechar a caixa, espera o botão ser solto antes de aceitar cliques de novo
+        if (ignorarCliqueAtual)
+        {
+            bool algumBotao = Input.GetMouseButton(0) || Input.GetMouseButtonUp(0)
+                           || Input.GetMouseButton(1) || Input.GetMouseButtonUp(1);
+            if (algumBotao) return;
+            ignorarCliqueAtual = false;
+        }
+
+        // Botão direito: guardar a peça (a que está na mão ou a apontada pelo mouse)
+        if (Input.GetMouseButtonDown(1))
+        {
+            ISelectable alvo = ObterAlvoDoBotaoDireito();
+            alvo?.OnRightClick();
+        }
+
         if (Input.GetMouseButtonDown(0))
         {
             pointerDownTime = Time.time;
@@ -188,6 +212,40 @@ public class SelectionManager : MonoBehaviour
         {
             currentSelected.OnDeselect();
             currentSelected = null;
+        }
+    }
+
+    #endregion
+
+    #region Botão Direito / Limpeza de Referências
+
+    /// <summary>
+    /// Peça na mão tem prioridade; se não houver, usa o que está sob o cursor.
+    /// </summary>
+    private ISelectable ObterAlvoDoBotaoDireito()
+    {
+        if (currentSelected is ComponenteBaseMontagem naMao && naMao.NaMao) return naMao;
+        return currentHovered;
+    }
+
+    /// <summary>
+    /// Remove qualquer referência ao objeto (seleção, hover, hold). Deve ser chamado
+    /// antes de destruir um ISelectable, senão o manager tenta falar com um objeto morto.
+    /// </summary>
+    public void Esquecer(ISelectable alvo)
+    {
+        if (alvo == null) return;
+
+        if (currentSelected == alvo) currentSelected = null;
+        if (heldObject == alvo) heldObject = null;
+
+        if (currentHovered == alvo)
+        {
+            currentHovered = null;
+            if (UiController.Instance != null && UiController.Instance.textNameUI != null)
+            {
+                UiController.Instance.textNameUI.text = "";
+            }
         }
     }
 

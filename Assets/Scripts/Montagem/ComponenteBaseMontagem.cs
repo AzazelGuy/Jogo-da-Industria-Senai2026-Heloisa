@@ -7,6 +7,7 @@ using TMPro;
 /// snapping no encaixe correto, outline visual, integração com o StepChecker
 /// e gerenciamento de física (Rigidbody e MeshCollider) ao segurar, soltar ou encaixar.
 /// </summary>
+[RequireComponent(typeof(Rigidbody))]
 public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 {
     #region Campos Serializados - Principais
@@ -63,6 +64,8 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
     private bool isPlaced = false;
     private bool justSelected = false;
     private bool inscritoNaCamera = false;
+    private bool bloquearReselecao = false; // true no clique que soltou a peça (evita pegar de novo no mouse up)
+    private Rigidbody rbCache;
 
     private Renderer meshRenderer;
     private Material[] originalMaterials;
@@ -104,6 +107,7 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
     public string myID => InfoPeca != null ? InfoPeca.ID : "";
     public bool IsPlaced => isPlaced;
+    public bool NaMao => cur_state == State.Selected;
     public Tipo? TipoPeca => InfoPeca != null ? InfoPeca.tipoDePeca : (Tipo?)null;
 
     #endregion
@@ -115,6 +119,7 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         if (anim == null) anim = GetComponent<Animator>();
         originalPosition = transform.position;
         mainCamera = Camera.main;
+        rbCache = GetComponent<Rigidbody>();
         SetupOutlineMaterial();
     }
 
@@ -165,6 +170,45 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         }
     }
 
+    private void FixedUpdate()
+    {
+        ConfinarNaAreaDaMesa();
+    }
+
+    private void LateUpdate()
+    {
+        // Só libera a re-seleção depois que o SelectionManager já processou o mouse up deste clique
+        if (bloquearReselecao && Input.GetMouseButtonUp(0))
+        {
+            bloquearReselecao = false;
+        }
+    }
+
+    #endregion
+
+    #region Área Limitada da Mesa
+
+    /// <summary>
+    /// Peças soltas ficam dentro da AreaLimiteMesa. Na mão (Selected) ou encaixadas, não são afetadas.
+    /// </summary>
+    private void ConfinarNaAreaDaMesa()
+    {
+        if (isPlaced || cur_state == State.Selected) return;
+        if (AreaLimiteMesa.Instance == null || rbCache == null || rbCache.isKinematic) return;
+
+        Vector3 pos = rbCache.position;
+        Vector3 limitada = AreaLimiteMesa.Instance.Limitar(pos);
+        if (limitada == pos) return;
+
+        rbCache.position = limitada;
+
+        // Zera a velocidade só nos eixos que bateram na "parede" invisível
+        Vector3 vel = rbCache.linearVelocity;
+        if (!Mathf.Approximately(limitada.x, pos.x)) vel.x = 0f;
+        if (!Mathf.Approximately(limitada.z, pos.z)) vel.z = 0f;
+        rbCache.linearVelocity = vel;
+    }
+
     #endregion
 
     #region Inscrição no Evento da Câmera
@@ -210,6 +254,8 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
     public void OnSelect()
     {
+        if (bloquearReselecao) return;
+
         if (!isPlaced && interactWithStepChecker && StepChecker.Instance != null
             && !StepChecker.Instance.PodeColocarPeca(this, out string motivo))
         {
@@ -222,6 +268,36 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
     }
 
     public void OnDeselect() => Deselect();
+
+    /// <summary>
+    /// Botão direito: guarda a peça de volta na caixa (se ela veio da caixa e não está encaixada).
+    /// </summary>
+    public void OnRightClick()
+    {
+        if (isPlaced) return;
+        if (CaixaPecasUi.Instance == null) return;
+
+        CaixaPecasUi.Instance.GuardarPeca(this);
+    }
+
+    /// <summary>
+    /// Limpa o que a peça deixou espalhado (modelo fantasma no slot, estado de seleção, textos)
+    /// antes de ser destruída pela caixa.
+    /// </summary>
+    public void PrepararParaGuardar()
+    {
+        if (cur_state == State.Selected)
+        {
+            cur_state = State.Normal;
+            isSnapped = false;
+
+            SetOutlineVisible(false);
+            if (targetSlot != null) targetSlot.UpdateModel(null);
+            GameManager.Instance.ClearObject();
+        }
+
+        UpdateUIText("");
+    }
 
     #endregion
 
@@ -260,8 +336,8 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
     {
         if (isPlaced) return;
 
+        // Solta a peça ONDE ESTÁ (a física assume e a área da mesa a mantém dentro dos limites)
         cur_state = State.Normal;
-        transform.position = originalPosition;
         isSnapped = false;
 
         SetOutlineVisible(false);
@@ -319,6 +395,7 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
     private void DropObject()
     {
+        bloquearReselecao = true;
         Rigidbody rb = GetComponent<Rigidbody>();
 
         if (isSnapped && targetSlot != null)
