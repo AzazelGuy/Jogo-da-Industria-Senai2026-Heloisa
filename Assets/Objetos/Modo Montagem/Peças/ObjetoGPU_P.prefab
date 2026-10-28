@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4324057803739178317}
   - component: {fileID: 6611074338907057535}
   - component: {fileID: 3112257712426656331}
+  - component: {fileID: 6264570500969578173}
   m_Layer: 6
   m_Name: ObjetoGPU_P
   m_TagString: Untagged
@@ -81,6 +82,33 @@ MonoBehaviour:
     m_Bits: 256
   dragHeightOffset: 0.05
   outlineMaterial: {fileID: 2100000, guid: 79bacae4d97e6cb4dbd4c8e7d8ea4871, type: 2}
+--- !u!54 &6264570500969578173
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 38314765973880595}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1001 &3704581817830498571
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -139,7 +167,7 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 13f3ee7a3e46c794bba2354f2c616441, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 9024665411359728164}
+      addedObject: {fileID: 1230980924784603231}
   m_SourcePrefab: {fileID: 100100000, guid: 13f3ee7a3e46c794bba2354f2c616441, type: 3}
 --- !u!33 &237621372679489861 stripped
 MeshFilter:
@@ -156,7 +184,7 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 13f3ee7a3e46c794bba2354f2c616441, type: 3}
   m_PrefabInstance: {fileID: 3704581817830498571}
   m_PrefabAsset: {fileID: 0}
---- !u!64 &9024665411359728164
+--- !u!64 &1230980924784603231
 MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -175,6 +203,6 @@ MeshCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 5
-  m_Convex: 0
+  m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -1581138870424665888, guid: 13f3ee7a3e46c794bba2354f2c616441, type: 3}
