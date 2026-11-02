@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Informações de uma peça requerida para a montagem, configurável no Inspector.
@@ -92,6 +93,9 @@ public class StepChecker : MonoBehaviour
     /// </summary>
     public static event Action<string> OnAcaoBloqueada;
 
+    /// <summary>Encaminha erros globais ao controlador de diálogo da cena de montagem.</summary>
+    public static event Action<string> OnMistakeRaised;
+
     #endregion
 
     #region Estado Interno
@@ -111,6 +115,8 @@ public class StepChecker : MonoBehaviour
 
     public IReadOnlyList<ComponenteBaseMontagem> PecasColocadas => pecasColocadas;
     public bool MontagemConcluida => montagemConcluida;
+    public bool FeedbackErroAtivo => MistakeEvent.IsFeedbackActive;
+    public static void SetMistakeFeedbackActive(bool active) => MistakeEvent.SetFeedbackActive(active);
 
     /// <summary>
     /// True se a montagem está configurada em etapas sequenciais.
@@ -132,6 +138,12 @@ public class StepChecker : MonoBehaviour
 
     private void Awake()
     {
+        if (SceneManager.GetActiveScene().name != "ModoMontagem")
+        {
+            Destroy(this);
+            return;
+        }
+
         if (Instance == null)
         {
             Instance = this;
@@ -143,6 +155,25 @@ public class StepChecker : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        MistakeEvent.Raised += RelayMistake;
+    }
+
+    private void Update()
+    {
+        if (SceneManager.GetActiveScene().name != "ModoMontagem")
+        {
+            Destroy(this);
+            return;
+        }
+    }
+
+    private void OnDisable()
+    {
+        MistakeEvent.Raised -= RelayMistake;
+    }
+
     private void OnDestroy()
     {
         // Só limpa se for a instância "oficial". Antes, o duplicado sendo destruído
@@ -151,6 +182,11 @@ public class StepChecker : MonoBehaviour
         {
             Instance = null;
         }
+    }
+
+    private static void RelayMistake(string message)
+    {
+        OnMistakeRaised?.Invoke(message);
     }
 
     #endregion
@@ -274,6 +310,7 @@ public class StepChecker : MonoBehaviour
 
         Debug.Log($"[StepChecker] Bloqueado: {motivo}");
         OnAcaoBloqueada?.Invoke(motivo);
+        MistakeEvent.Raise(motivo);
     }
 
     /// <summary>

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Gabinete
   m_EditorClassIdentifier: 
   ID: pc_Gabinete
-  Nome: 
+  Nome: Gabinete Pequeno
   Descricao: 
   tipoDePeca: 0
   modelos: []

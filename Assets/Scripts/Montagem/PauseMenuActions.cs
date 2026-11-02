@@ -44,6 +44,7 @@ public class PauseMenuActions : MonoBehaviour
 
     void Update()
     {
+        if (MistakeEvent.IsFeedbackActive) return;
         if (Input.GetKeyDown(KeyCode.Escape))
             TogglePause();
     }

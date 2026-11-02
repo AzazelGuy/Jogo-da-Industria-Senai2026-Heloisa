@@ -11,6 +11,9 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public class UiController : MonoBehaviour
 {
+    public const string HandToolName = "Mão";
+    public const string ScrewdriverToolName = "Chave de Fenda";
+
     #region Singleton
 
     public static UiController Instance;
@@ -62,11 +65,13 @@ public class UiController : MonoBehaviour
         // Duplicata que ainda vai ser destruída não deve processar input
         if (Instance != this) return;
 
+        if (MistakeEvent.IsFeedbackActive) return;
         if (PauseMenuActions.instance != null && PauseMenuActions.instance.Paused) return;
 
         // Com a caixa de peças aberta, o scroll/teclas não mexem na hotbar (o scroll pode ser da lista da caixa)
         if (CaixaPecasUi.Instance != null && CaixaPecasUi.Instance.IsOpen) return;
 
+        HandleHotbarPointerInput();
         HandleHotbarInput();
     }
 
@@ -166,7 +171,8 @@ public class UiController : MonoBehaviour
         int teclasDisponiveis = Mathf.Min(total, 9);
         for (int i = 0; i < teclasDisponiveis; i++)
         {
-            if (Input.GetKeyDown(KeyCode.Alpha1 + i) || Input.GetKeyDown(KeyCode.Keypad1 + i))
+            if (Input.GetKeyDown((KeyCode)((int)KeyCode.Alpha1 + i))
+                || Input.GetKeyDown((KeyCode)((int)KeyCode.Keypad1 + i)))
             {
                 novoIndice = i;
                 break;
@@ -185,6 +191,46 @@ public class UiController : MonoBehaviour
 
         posItemAtual = novoIndice;
         AtualizarHotbar();
+    }
+
+    private void HandleHotbarPointerInput()
+    {
+        if (!Input.GetMouseButtonDown(0) || posHotbarItens == null) return;
+
+        for (int i = 0; i < posHotbarItens.Length; i++)
+        {
+            RectTransform slot = posHotbarItens[i];
+            if (!IsPointerOverSlot(slot)) continue;
+
+            posItemAtual = i;
+            AtualizarHotbar();
+            return;
+        }
+    }
+
+    /// <summary>Informa se o mouse está sobre um item da hotbar, evitando clique no mundo 3D.</summary>
+    public bool IsPointerOverHotbar()
+    {
+        if (posHotbarItens == null) return false;
+
+        foreach (RectTransform slot in posHotbarItens)
+        {
+            if (IsPointerOverSlot(slot)) return true;
+        }
+
+        return false;
+    }
+
+    private bool IsPointerOverSlot(RectTransform slot)
+    {
+        if (slot == null) return false;
+
+        Canvas canvas = slot.GetComponentInParent<Canvas>();
+        Camera eventCamera = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay
+            ? canvas.worldCamera
+            : null;
+
+        return RectTransformUtility.RectangleContainsScreenPoint(slot, Input.mousePosition, eventCamera);
     }
 
     /// <summary>
@@ -235,6 +281,11 @@ public class UiController : MonoBehaviour
             }
             return string.Empty;
         }
+    }
+
+    public bool IsToolSelected(string toolName)
+    {
+        return string.Equals(FerramentaSelecionadaAtual, toolName, System.StringComparison.Ordinal);
     }
 
     public TextMeshProUGUI textNameUI => nameText;

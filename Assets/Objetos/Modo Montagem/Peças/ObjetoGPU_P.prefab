@@ -50,7 +50,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -76,7 +76,7 @@ MonoBehaviour:
   ParticlesPlace: {fileID: 1133285911889207144, guid: 6b1ad51cc55f27b42b451ab225da1de3, type: 3}
   pieceNameText: {fileID: 0}
   interactWithStepChecker: 1
-  snapDistance: 1
+  snapDistance: 5
   surfaceLayerMask:
     serializedVersion: 2
     m_Bits: 256
@@ -164,10 +164,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 13f3ee7a3e46c794bba2354f2c616441, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1230980924784603231}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 13f3ee7a3e46c794bba2354f2c616441, type: 3}
 --- !u!33 &237621372679489861 stripped
 MeshFilter:
@@ -179,30 +176,3 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 13f3ee7a3e46c794bba2354f2c616441, type: 3}
   m_PrefabInstance: {fileID: 3704581817830498571}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &4586978175265102938 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 13f3ee7a3e46c794bba2354f2c616441, type: 3}
-  m_PrefabInstance: {fileID: 3704581817830498571}
-  m_PrefabAsset: {fileID: 0}
---- !u!64 &1230980924784603231
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4586978175265102938}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: -1581138870424665888, guid: 13f3ee7a3e46c794bba2354f2c616441, type: 3}

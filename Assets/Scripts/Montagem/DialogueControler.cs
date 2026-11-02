@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
@@ -37,16 +39,26 @@ public class DialogueControler : MonoBehaviour
     [Header("Input")]
     [SerializeField] private KeyCode confirmKey = KeyCode.E;
 
+    [Header("Feedback de Erro")]
+    [TextArea(2, 5)]
+    [SerializeField] private string defaultMistakeMessage = "Essa ação não pode ser feita agora.";
+    [SerializeField, Min(0f)] private float mistakeFadeDuration = 0.2f;
+
     private DialoguePage[] pages;
     private int currentPage;
     private bool isTyping;
     private float previousTimeScale = 1f;
+    private bool currentDialogueIsMistake;
+    private bool isClosingMistakeDialogue;
+    private readonly Queue<string> pendingMistakes = new Queue<string>();
 
 
     private int talkingHash;
     private Coroutine typingRoutine;
+    private Coroutine mistakeFadeRoutine;
+    private CanvasGroup dialogueCanvasGroup;
     private Image currentIllustration;
-    private bool IsActive => dialogueGroup.activeSelf;
+    private bool IsActive => dialogueGroup != null && dialogueGroup.activeSelf;
 
     // =========================
     // Ciclo de vida
@@ -62,9 +74,24 @@ public class DialogueControler : MonoBehaviour
         instance = this;
         talkingHash = Animator.StringToHash(talkingParam);
         if (portrait != null && portraitAnimator == null) portraitAnimator = portrait.GetComponent<Animator>();
+        CreateDefaultDialogueUIIfNeeded();
+        if (dialogueGroup != null)
+        {
+            dialogueCanvasGroup = dialogueGroup.GetComponent<CanvasGroup>();
+            if (dialogueCanvasGroup == null) dialogueCanvasGroup = dialogueGroup.AddComponent<CanvasGroup>();
+        }
     }
 
-    private void Start() => dialogueGroup.SetActive(false);
+    private void Start()
+    {
+        if (dialogueGroup == null)
+        {
+            Debug.LogError("[DialogueControler] Nenhum painel de diálogo foi configurado ou criado.", this);
+            return;
+        }
+
+        dialogueGroup.SetActive(false);
+    }
 
     private void OnDestroy()
     {
@@ -72,15 +99,117 @@ public class DialogueControler : MonoBehaviour
         if (instance != this) return;
 
         instance = null;
+        StepChecker.OnMistakeRaised -= QueueMistakeDialogue;
+        if (currentDialogueIsMistake || isClosingMistakeDialogue)
+            StepChecker.SetMistakeFeedbackActive(false);
         if (IsActive) Time.timeScale = previousTimeScale; // não deixa o jogo congelado
+    }
+
+    private void OnEnable()
+    {
+        StepChecker.OnMistakeRaised += QueueMistakeDialogue;
+    }
+
+    private void OnDisable()
+    {
+        StepChecker.OnMistakeRaised -= QueueMistakeDialogue;
     }
 
     private void Update()
     {
-        if (!IsActive || !Input.GetKeyDown(confirmKey)) return;
+        if (IsActive)
+        {
+            if (isClosingMistakeDialogue) return;
+            if (!Input.GetKeyDown(confirmKey)) return;
 
-        if (isTyping) FinishTyping();
-        else NextPage();
+            if (isTyping) FinishTyping();
+            else NextPage();
+            return;
+        }
+
+        if (pendingMistakes.Count > 0)
+            StartMistakeDialogue(pendingMistakes.Dequeue());
+    }
+
+    private void QueueMistakeDialogue(string message)
+    {
+        if (instance != this || SceneManager.GetActiveScene().name != "ModoMontagem") return;
+        pendingMistakes.Enqueue(string.IsNullOrWhiteSpace(message) ? defaultMistakeMessage : message);
+    }
+
+    private void StartMistakeDialogue(string message)
+    {
+        if (dialogueGroup == null || dialogueText == null)
+        {
+            Debug.LogError("[DialogueControler] Não foi possível mostrar o erro: painel ou texto não configurado.", this);
+            return;
+        }
+
+        currentDialogueIsMistake = true;
+        if (dialogueCanvasGroup != null) dialogueCanvasGroup.alpha = 0f;
+        StepChecker.SetMistakeFeedbackActive(true);
+        StartDialogue(new[] { new DialoguePage { text = $"{message}\n\nAperte {confirmKey} para continuar." } });
+    }
+
+    private void CreateDefaultDialogueUIIfNeeded()
+    {
+        if (dialogueGroup != null && dialogueText != null) return;
+        if (dialogueGroup != null || dialogueText != null)
+        {
+            Debug.LogError("[DialogueControler] Configure dialogueGroup e dialogueText juntos.", this);
+            return;
+        }
+
+        GameObject canvasObject = new GameObject("DialogueCanvas");
+        canvasObject.transform.SetParent(transform, false);
+        Canvas canvas = canvasObject.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.overrideSorting = true;
+        canvas.sortingOrder = 10000;
+        CanvasScaler scaler = canvasObject.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920f, 1080f);
+        canvasObject.AddComponent<GraphicRaycaster>();
+
+        TMP_FontAsset fallbackFont = TMP_Settings.defaultFontAsset;
+        TMP_Text existingText = FindFirstObjectByType<TMP_Text>();
+        if (existingText != null) fallbackFont = existingText.font;
+
+        dialogueGroup = new GameObject("DialogueGroup", typeof(RectTransform), typeof(CanvasGroup));
+        dialogueGroup.transform.SetParent(canvasObject.transform, false);
+        RectTransform groupRect = (RectTransform)dialogueGroup.transform;
+        groupRect.anchorMin = Vector2.zero;
+        groupRect.anchorMax = Vector2.one;
+        groupRect.offsetMin = Vector2.zero;
+        groupRect.offsetMax = Vector2.zero;
+
+        GameObject panel = new GameObject("DialoguePanel", typeof(RectTransform), typeof(Image));
+        panel.transform.SetParent(dialogueGroup.transform, false);
+        RectTransform panelRect = (RectTransform)panel.transform;
+        panelRect.anchorMin = new Vector2(0.06f, 0.06f);
+        panelRect.anchorMax = new Vector2(0.94f, 0.3f);
+        panelRect.offsetMin = Vector2.zero;
+        panelRect.offsetMax = Vector2.zero;
+        panel.GetComponent<Image>().color = new Color(0.03f, 0.04f, 0.08f, 0.94f);
+
+        GameObject textObject = new GameObject("DialogueText", typeof(RectTransform), typeof(TextMeshProUGUI));
+        textObject.transform.SetParent(panel.transform, false);
+        RectTransform textRect = (RectTransform)textObject.transform;
+        textRect.anchorMin = new Vector2(0.06f, 0.12f);
+        textRect.anchorMax = new Vector2(0.94f, 0.88f);
+        textRect.offsetMin = Vector2.zero;
+        textRect.offsetMax = Vector2.zero;
+
+        dialogueText = textObject.GetComponent<TextMeshProUGUI>();
+        dialogueText.font = fallbackFont;
+        dialogueText.fontSize = 36f;
+        dialogueText.enableAutoSizing = true;
+        dialogueText.fontSizeMin = 22f;
+        dialogueText.fontSizeMax = 36f;
+        dialogueText.alignment = TextAlignmentOptions.MidlineLeft;
+        dialogueText.color = Color.white;
+        dialogueText.raycastTarget = false;
+        dialogueGroup.SetActive(false);
     }
 
     // =========================
@@ -88,7 +217,7 @@ public class DialogueControler : MonoBehaviour
     // =========================
     public void StartDialogue(DialoguePage[] dialoguePages)
     {
-        if (dialoguePages == null || dialoguePages.Length == 0 || IsActive) return;
+        if (dialoguePages == null || dialoguePages.Length == 0 || dialogueGroup == null || dialogueText == null || IsActive) return;
 
         pages = dialoguePages;
         currentPage = 0;
@@ -97,6 +226,8 @@ public class DialogueControler : MonoBehaviour
         Time.timeScale = 0f;
 
         dialogueGroup.SetActive(true);
+        if (currentDialogueIsMistake && dialogueCanvasGroup != null)
+            mistakeFadeRoutine = StartCoroutine(FadeDialogueGroup(0f, 1f));
         ShowPage(currentPage);
     }
 
@@ -110,6 +241,8 @@ public class DialogueControler : MonoBehaviour
 
     private void EndDialogue()
     {
+        bool wasMistakeDialogue = currentDialogueIsMistake;
+        currentDialogueIsMistake = false;
         StopRoutine(ref typingRoutine);
         ShowIllustration(null);
 
@@ -118,10 +251,56 @@ public class DialogueControler : MonoBehaviour
         StopVoice();
         dialogueText.text = string.Empty;
 
+        if (wasMistakeDialogue)
+        {
+            StopRoutine(ref mistakeFadeRoutine);
+            isClosingMistakeDialogue = true;
+            mistakeFadeRoutine = StartCoroutine(FadeOutAndCloseMistakeDialogue());
+        }
+        else
+        {
+            CloseDialogueGroup();
+            OnDialogueEnd?.Invoke();
+        }
+    }
+
+    private IEnumerator FadeOutAndCloseMistakeDialogue()
+    {
+        yield return FadeDialogueGroup(1f, 0f);
+        mistakeFadeRoutine = null;
+        isClosingMistakeDialogue = false;
+        CloseDialogueGroup();
+
+        if (pendingMistakes.Count > 0)
+            StartMistakeDialogue(pendingMistakes.Dequeue());
+        else
+            StepChecker.SetMistakeFeedbackActive(false);
+    }
+
+    private IEnumerator FadeDialogueGroup(float from, float to)
+    {
+        if (dialogueCanvasGroup == null || mistakeFadeDuration <= 0f)
+        {
+            if (dialogueCanvasGroup != null) dialogueCanvasGroup.alpha = to;
+            yield break;
+        }
+
+        float elapsed = 0f;
+        while (elapsed < mistakeFadeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            dialogueCanvasGroup.alpha = Mathf.Lerp(from, to, elapsed / mistakeFadeDuration);
+            yield return null;
+        }
+
+        dialogueCanvasGroup.alpha = to;
+    }
+
+    private void CloseDialogueGroup()
+    {
         Time.timeScale = previousTimeScale;
         dialogueGroup.SetActive(false);
-
-        OnDialogueEnd?.Invoke();
+        if (dialogueCanvasGroup != null) dialogueCanvasGroup.alpha = 1f;
     }
 
     // =========================

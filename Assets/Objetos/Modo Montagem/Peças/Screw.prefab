@@ -76,8 +76,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.1998425, y: 2.2747731, z: 1.3859215}
-  m_Center: {x: 0, y: 0.6373865, z: 0}
+  m_Size: {x: 1.4727685, y: 3.415106, z: 1.9313365}
+  m_Center: {x: 0, y: 1.207553, z: 0}
 --- !u!1001 &6044833482588474089
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -126,6 +126,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: cadce67c4ae8187b6b955db63ed02323, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: cadce67c4ae8187b6b955db63ed02323, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 79bacae4d97e6cb4dbd4c8e7d8ea4871, type: 2}
     - target: {fileID: 919132149155446097, guid: cadce67c4ae8187b6b955db63ed02323, type: 3}
       propertyPath: m_Name
       value: Parafuso

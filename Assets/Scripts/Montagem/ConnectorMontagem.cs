@@ -115,6 +115,7 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
     public void OnHold()
     {
         if (estaConectado) return;
+        if (!IsScrewdriverSelected()) return;
 
         switch (tipoDeConexao)
         {
@@ -134,6 +135,21 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
                 ConcluirConexao();
                 break;
         }
+    }
+
+    public bool IsScrewdriverSelected()
+    {
+        return UiController.Instance != null
+            && UiController.Instance.IsToolSelected(UiController.ScrewdriverToolName);
+    }
+
+    public void NotifyScrewdriverRequired()
+    {
+        string message = $"Selecione '{UiController.ScrewdriverToolName}' na Hotbar para colocar parafusos.";
+        if (StepChecker.Instance != null)
+            StepChecker.Instance.NotificarBloqueio(message);
+        else
+            Debug.LogWarning($"[ConnectorMontagem] {message}", this);
     }
 
     /// <summary>

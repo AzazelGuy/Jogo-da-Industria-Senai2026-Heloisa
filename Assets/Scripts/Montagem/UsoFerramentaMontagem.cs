@@ -1,47 +1,53 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Collider))]
-public class UsoFerramentaMontagem: MonoBehaviour
+public class UsoFerramentaMontagem : MonoBehaviour
 {
     [Header("Configuração da Ação")]
     [Tooltip("ID da ação exigida pelo StepChecker (ex.: 'parafusar', 'pasta_termica').")]
     [SerializeField] private string acaoID;
-
     [Tooltip("Nome exato da ferramenta na Hotbar necessária para esta ação (ex.: 'Chave de Fenda').")]
     [SerializeField] private string ferramentaNecessaria;
 
     [Header("Feedback")]
     [SerializeField] private GameObject resultadoVisual;
 
-    private void OnMouseDown()
-{
-    // Trava se o jogo estiver pausado
-    if (PauseMenuActions.instance != null && PauseMenuActions.instance.Paused) return;
-    if (StepChecker.Instance == null || UiController.Instance == null) return;
-
-    // 1. Verifica se a ação está liberada pela sequência do StepChecker
-    if (!StepChecker.Instance.AcaoDisponivel(acaoID))
+    /// <summary>Executa a ação depois que o SelectionManager confirma o clique nesta área.</summary>
+    public void TryPerformAction()
     {
-        Debug.Log("[UsoFerramenta] Ação não disponível no momento (fora da etapa).");
-        return;
-    }
+        if (MistakeEvent.IsFeedbackActive) return;
+        if (PauseMenuActions.instance != null && PauseMenuActions.instance.Paused) return;
 
-    // 2. Verifica se o jogador está com a ferramenta certa selecionada na Hotbar
-    string ferramentaAtual = UiController.Instance.FerramentaSelecionadaAtual;
-    if (ferramentaAtual != ferramentaNecessaria)
-    {
-        StepChecker.Instance.NotificarBloqueio($"Você precisa selecionar '{ferramentaNecessaria}' na Hotbar para fazer isso.");
-        return;
-    }
+        UiController uiController = UiController.Instance;
+        if (uiController == null)
+        {
+            Debug.LogError("[UsoFerramenta] UiController não está ativo; não é possível validar a ferramenta selecionada.", this);
+            return;
+        }
 
-    // 3. Executa a ação com sucesso!
-    if (StepChecker.Instance.RegistrarAcao(acaoID))
-    {
+        StepChecker stepChecker = StepChecker.Instance;
+        if (stepChecker != null && !stepChecker.AcaoDisponivel(acaoID))
+        {
+            stepChecker.NotificarBloqueio("Essa ação ainda não está disponível nesta etapa.");
+            return;
+        }
+
+        string ferramentaAtual = uiController.FerramentaSelecionadaAtual;
+        if (ferramentaAtual != ferramentaNecessaria)
+        {
+            if (stepChecker != null)
+                stepChecker.NotificarBloqueio($"Você precisa selecionar '{ferramentaNecessaria}' na Hotbar para fazer isso.");
+            else
+                Debug.LogWarning($"[UsoFerramenta] Selecione '{ferramentaNecessaria}' na Hotbar para fazer isso.", this);
+            return;
+        }
+
+        if (stepChecker != null && !stepChecker.RegistrarAcao(acaoID)) return;
+
         if (resultadoVisual != null) resultadoVisual.SetActive(true);
         Debug.Log($"[UsoFerramenta] Ação {acaoID} executada com sucesso usando {ferramentaAtual}!");
-
-        // Opcional: destruir este script ou desativar o collider se for ação única
+        GetComponent<Collider>().enabled = false;
         enabled = false;
+
     }
-}
 }

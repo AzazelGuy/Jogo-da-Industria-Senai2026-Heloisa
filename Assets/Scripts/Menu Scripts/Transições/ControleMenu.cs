@@ -1,49 +1,53 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class ControleMenu : MonoBehaviour
 {
-    [Header("Painéis de UI")]
+    [Header("Painï¿½is de UI")]
     public RectTransform menuInicial;
     public RectTransform menuModos;
 
-    [Header("Configurações da Transição")]
+    [Header("Configuraï¿½ï¿½es da Transiï¿½ï¿½o")]
     public float velocidadeTransicao = 8f;
 
-    [Header("Posição Escondida do Menu de Modos")]
+    [Header("Posiï¿½ï¿½o Escondida do Menu de Modos")]
     [Tooltip("Altura em Y onde o Menu de Modos fica escondido antes de aparecer")]
     public float alturaEscondidoY = 1080f;
 
+    [SerializeField] AudioClip MenuOST;
     private Vector2 posAlvoInicial;
     private Vector2 posAlvoModos;
     private bool emTransicao = false;
-    private bool estaNoMenuModos = false; // Controla qual menu está ativo
+    private bool estaNoMenuModos = false; // Controla qual menu estï¿½ ativo
 
     void Start()
     {
-        // Garante que o Menu Inicial começa no centro (Y = 0)
+        // Garante que o Menu Inicial comeï¿½a no centro (Y = 0)
         if (menuInicial != null)
         {
             menuInicial.anchoredPosition = Vector2.zero;
             posAlvoInicial = menuInicial.anchoredPosition;
         }
 
-        // Garante que o Menu de Modos começa no topo escondido (Y = 1080)
+        // Garante que o Menu de Modos comeï¿½a no topo escondido (Y = 1080)
         if (menuModos != null)
         {
             menuModos.anchoredPosition = new Vector2(0, alturaEscondidoY);
             posAlvoModos = menuModos.anchoredPosition;
         }
+
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayMusic(MenuOST);
     }
 
     void Update()
     {
         if (!emTransicao) return;
 
-        // Move suavemente os dois menus para as posições alvo
+        // Move suavemente os dois menus para as posiï¿½ï¿½es alvo
         menuInicial.anchoredPosition = Vector2.Lerp(menuInicial.anchoredPosition, posAlvoInicial, Time.deltaTime * velocidadeTransicao);
         menuModos.anchoredPosition = Vector2.Lerp(menuModos.anchoredPosition, posAlvoModos, Time.deltaTime * velocidadeTransicao);
 
-        // Finaliza a transição quando estiver bem próximo
+        // Finaliza a transiï¿½ï¿½o quando estiver bem prï¿½ximo
         if (Vector2.Distance(menuModos.anchoredPosition, posAlvoModos) < 0.1f)
         {
             menuInicial.anchoredPosition = posAlvoInicial;
@@ -52,7 +56,7 @@ public class ControleMenu : MonoBehaviour
         }
     }
 
-    // Função chamada no clique do botão JOGAR
+    // Funï¿½ï¿½o chamada no clique do botï¿½o JOGAR
     public void AbrirMenuModos()
     {
         posAlvoInicial = new Vector2(0, -alturaEscondidoY); // Faz o Menu Inicial descer para -1080
@@ -61,7 +65,7 @@ public class ControleMenu : MonoBehaviour
         estaNoMenuModos = true;
     }
 
-    // Função para botão Voltar
+    // Funï¿½ï¿½o para botï¿½o Voltar
     public void VoltarParaMenuInicial()
     {
         posAlvoInicial = Vector2.zero;                      // Menu Inicial volta para o centro (0)
@@ -70,13 +74,13 @@ public class ControleMenu : MonoBehaviour
         estaNoMenuModos = false;
     }
 
-    // Método de leitura utilizado pelo script AtalhosTeclado
+    // Mï¿½todo de leitura utilizado pelo script AtalhosTeclado
     public bool EstaNoMenuModos()
     {
         return estaNoMenuModos;
     }
 
-    // Função para o botão SAIR
+    // Funï¿½ï¿½o para o botï¿½o SAIR
     public void SairDoJogo()
     {
         Debug.Log("Saindo do Jogo...");

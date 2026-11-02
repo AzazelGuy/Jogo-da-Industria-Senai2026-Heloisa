@@ -15,6 +15,7 @@ public class GameManager : MonoBehaviour
 
     #region Estado Interno
 
+    [SerializeField] AudioClip musicMontagem;
     private GameObject selectedObject = null;
 
     #endregion
@@ -32,10 +33,14 @@ public class GameManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayMusicWithFade(musicMontagem);
     }
 
     private void Update()
     {
+        if (MistakeEvent.IsFeedbackActive) return;
+
         // Atalho de reinício: recarrega a cena atual e limpa o estado da UI/StepChecker
         if (Input.GetKeyDown(KeyCode.R))
         {

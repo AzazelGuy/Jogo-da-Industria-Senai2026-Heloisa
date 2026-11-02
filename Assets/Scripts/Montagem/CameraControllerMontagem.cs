@@ -203,6 +203,8 @@ public class CameraControllerMontagem : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (MistakeEvent.IsFeedbackActive) return;
+
         // Ordem importa: primeiro decide os alvos, depois suaviza, por fim aplica no transform.
         AtualizarAlvosDeOlhar();
         AtualizarPoseBaseNaVisaoGeral();

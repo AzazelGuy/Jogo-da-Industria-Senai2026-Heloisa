@@ -208,6 +208,7 @@ public class IdentifiyerEncaixe : MonoBehaviour
     {
         bool visible = ultimaSolicitacaoVisivel.GetValueOrDefault(false)
             && (StepChecker.Instance == null || StepChecker.Instance.SlotLiberado(this));
+        bool colliderVisible = visible && (!IsOccupied || !AreScrewsFullyDone());
 
         Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
         foreach (Renderer renderer in renderers)
@@ -223,7 +224,7 @@ public class IdentifiyerEncaixe : MonoBehaviour
         {
             if (collider != null)
             {
-                collider.enabled = visible;
+                collider.enabled = colliderVisible;
             }
         }
     }

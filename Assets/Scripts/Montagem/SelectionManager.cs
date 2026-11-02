@@ -38,6 +38,7 @@ public class SelectionManager : MonoBehaviour
     private float lastClickTime;
     private bool isHolding;
     private bool ignorarCliqueAtual; // evita "clique fantasma" no mundo ao fechar a caixa de peças
+    private bool ignorarSolturaDoClique;
 
     #endregion
 
@@ -64,6 +65,12 @@ public class SelectionManager : MonoBehaviour
         }
         if (PauseMenuActions.instance != null && PauseMenuActions.instance.Paused)
         {
+            CancelarCliquePendente();
+            return;
+        }
+        if (StepChecker.Instance != null && StepChecker.Instance.FeedbackErroAtivo)
+        {
+            CancelarCliquePendente();
             return;
         }
         HandleHover();
@@ -130,6 +137,23 @@ public class SelectionManager : MonoBehaviour
             ignorarCliqueAtual = false;
         }
 
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (UiController.Instance != null && UiController.Instance.IsPointerOverHotbar())
+            {
+                ignorarSolturaDoClique = true;
+                heldObject = null;
+                return;
+            }
+
+            if (TryHandleActionClick())
+            {
+                ignorarSolturaDoClique = true;
+                heldObject = null;
+                return;
+            }
+        }
+
         // Botão direito: guardar a peça (a que está na mão ou a apontada pelo mouse)
         if (Input.GetMouseButtonDown(1))
         {
@@ -142,11 +166,19 @@ public class SelectionManager : MonoBehaviour
             pointerDownTime = Time.time;
             isHolding = false;
             heldObject = GetSelectableUnderCursor();
+
+            if (heldObject is ConnectorMontagem connector && !connector.IsScrewdriverSelected())
+            {
+                connector.NotifyScrewdriverRequired();
+                heldObject = null;
+                ignorarSolturaDoClique = true;
+                return;
+            }
         }
 
         if (Input.GetMouseButton(0))
         {
-            if (!isHolding && (Time.time - pointerDownTime >= holdThreshold))
+            if (!ignorarSolturaDoClique && !isHolding && (Time.time - pointerDownTime >= holdThreshold))
             {
                 isHolding = true;
             }
@@ -159,6 +191,13 @@ public class SelectionManager : MonoBehaviour
 
         if (Input.GetMouseButtonUp(0))
         {
+            if (ignorarSolturaDoClique)
+            {
+                ignorarSolturaDoClique = false;
+                heldObject = null;
+                return;
+            }
+
             // Só trata como clique/seleção se não tiver virado um "hold"
             if (!isHolding)
             {
@@ -183,6 +222,13 @@ public class SelectionManager : MonoBehaviour
 
             heldObject = null;
         }
+    }
+
+    private void CancelarCliquePendente()
+    {
+        heldObject = null;
+        isHolding = false;
+        ignorarSolturaDoClique = Input.GetMouseButton(0);
     }
 
     #endregion
@@ -259,16 +305,40 @@ public class SelectionManager : MonoBehaviour
     /// </summary>
     private ISelectable GetSelectableUnderCursor()
     {
+        return TryGetHitUnderCursor(out RaycastHit hit)
+            ? hit.collider.GetComponentInParent<ISelectable>()
+            : null;
+    }
+
+    private bool TryGetHitUnderCursor(out RaycastHit closestHit)
+    {
+        closestHit = default;
         if (cachedCamera == null) CacheCamera();
-        if (cachedCamera == null) return null;
+        if (cachedCamera == null) return false;
 
         Ray ray = cachedCamera.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit, maxDistance, selectableLayer))
-        {
-            return hit.collider.GetComponentInParent<ISelectable>();
-        }
+        bool didHit = Physics.Raycast(
+            ray,
+            out RaycastHit hit,
+            maxDistance,
+            selectableLayer,
+            QueryTriggerInteraction.Collide);
+        if (didHit) closestHit = hit;
 
-        return null;
+        Debug.DrawRay(ray.origin, ray.direction * (didHit ? hit.distance : maxDistance), Color.magenta);
+        return didHit;
+    }
+
+    private bool TryHandleActionClick()
+    {
+        if (!TryGetHitUnderCursor(out RaycastHit hit)) return false;
+
+        UsoFerramentaMontagem action = hit.collider.GetComponentInParent<UsoFerramentaMontagem>();
+        if (action == null) return false;
+
+        Debug.Log($"[SelectionManager] Área de interação clicada: '{action.name}'.", action);
+        action.TryPerformAction();
+        return true;
     }
 
     /// <summary>

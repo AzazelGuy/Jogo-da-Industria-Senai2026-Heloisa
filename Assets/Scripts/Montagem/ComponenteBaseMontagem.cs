@@ -151,6 +151,7 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
     private void Update()
     {
         if (isPlaced) return;
+        if (MistakeEvent.IsFeedbackActive) return;
         if (PauseMenuActions.instance != null && PauseMenuActions.instance.Paused) return;
 
         if (cur_state == State.Selected)
@@ -256,6 +257,12 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
     {
         if (bloquearReselecao) return;
 
+        if (!isPlaced && !IsRequiredToolSelected(UiController.HandToolName))
+        {
+            NotificarFerramentaNecessaria(UiController.HandToolName);
+            return;
+        }
+
         if (!isPlaced && interactWithStepChecker && StepChecker.Instance != null
             && !StepChecker.Instance.PodeColocarPeca(this, out string motivo))
         {
@@ -265,6 +272,20 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
         FindSlot();
         SelectPeca();
+    }
+
+    private static bool IsRequiredToolSelected(string toolName)
+    {
+        return UiController.Instance != null && UiController.Instance.IsToolSelected(toolName);
+    }
+
+    private static void NotificarFerramentaNecessaria(string toolName)
+    {
+        string message = $"Selecione '{toolName}' na Hotbar para pegar peças.";
+        if (StepChecker.Instance != null)
+            StepChecker.Instance.NotificarBloqueio(message);
+        else
+            Debug.LogWarning($"[ComponenteBaseMontagem] {message}");
     }
 
     public void OnDeselect() => Deselect();
@@ -398,6 +419,14 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         bloquearReselecao = true;
         Rigidbody rb = GetComponent<Rigidbody>();
 
+        IdentifiyerEncaixe slotCompativelProximo = FindCompatibleSlotUnderCursor()
+            ?? FindNearestCompatibleSlot(transform.position);
+        if (slotCompativelProximo != null)
+        {
+            targetSlot = slotCompativelProximo;
+            isSnapped = true;
+        }
+
         if (isSnapped && targetSlot != null)
         {
             // Encaixou perfeitamente no slot
@@ -434,6 +463,8 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         }
         else
         {
+            NotificarEncaixeIncompativelProximo();
+
             // Soltou fora: LIGA a física usando o MeshCollider para colidir com a mesa
             cur_state = State.Normal;
             isSnapped = false;
@@ -450,6 +481,39 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
                 rb.useGravity = true;
             }
         }
+    }
+
+    private void NotificarEncaixeIncompativelProximo()
+    {
+        if (!interactWithStepChecker || StepChecker.Instance == null) return;
+        if (FindNearestCompatibleSlot(transform.position) != null) return;
+
+        string pieceId = GetPieceId();
+        IdentifiyerEncaixe slotMaisProximo = null;
+        float menorDistancia = snapDistance;
+
+        foreach (IdentifiyerEncaixe slot in FindObjectsByType<IdentifiyerEncaixe>(FindObjectsSortMode.None))
+        {
+            if (slot == null) continue;
+
+            float distancia = Vector3.Distance(transform.position, slot.transform.position);
+            if (distancia > menorDistancia) continue;
+
+            bool acceptsPiece = slot.CanAcceptPieceId(pieceId)
+                                || slot.CanAcceptPiece(this)
+                                || slot.getID == pieceId;
+            if (acceptsPiece) continue;
+
+            if (slotMaisProximo == null || distancia < menorDistancia)
+            {
+                slotMaisProximo = slot;
+                menorDistancia = distancia;
+            }
+        }
+
+        if (slotMaisProximo != null)
+            StepChecker.Instance.NotificarBloqueio(
+                $"O encaixe '{slotMaisProximo.name}' não aceita a peça '{PieceName}'.");
     }
 
     #endregion
@@ -476,6 +540,67 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         }
 
         return true;
+    }
+
+    private IdentifiyerEncaixe FindNearestCompatibleSlot(Vector3 position)
+    {
+        IdentifiyerEncaixe nearestSlot = null;
+        float nearestDistance = snapDistance;
+        string expectedId = GetPieceId();
+
+        foreach (IdentifiyerEncaixe slot in FindObjectsByType<IdentifiyerEncaixe>(FindObjectsSortMode.None))
+        {
+            if (slot == null || !IsSlotAvailableForUse(slot)) continue;
+
+            bool acceptsPiece = slot.CanAcceptPieceId(expectedId)
+                                || slot.CanAcceptPiece(this)
+                                || slot.getID == expectedId;
+            if (!acceptsPiece) continue;
+
+            float distance = Vector3.Distance(position, slot.transform.position);
+            if (distance <= nearestDistance)
+            {
+                nearestSlot = slot;
+                nearestDistance = distance;
+            }
+        }
+
+        return nearestSlot;
+    }
+
+    private IdentifiyerEncaixe FindCompatibleSlotUnderCursor()
+    {
+        Camera camera = mainCamera != null ? mainCamera : Camera.main;
+        if (camera == null) return null;
+
+        Ray ray = camera.ScreenPointToRay(Input.mousePosition);
+        RaycastHit[] hits = Physics.RaycastAll(ray, 100f, ~0, QueryTriggerInteraction.Collide);
+        IdentifiyerEncaixe closestCompatibleSlot = null;
+        float closestDistance = float.MaxValue;
+        string expectedId = GetPieceId();
+
+        foreach (RaycastHit hit in hits)
+        {
+            if (hit.collider == null
+                || hit.collider.transform == transform
+                || hit.collider.transform.IsChildOf(transform))
+            {
+                continue;
+            }
+
+            IdentifiyerEncaixe slot = hit.collider.GetComponentInParent<IdentifiyerEncaixe>();
+            if (slot == null || !IsSlotAvailableForUse(slot) || hit.distance >= closestDistance) continue;
+
+            bool acceptsPiece = slot.CanAcceptPieceId(expectedId)
+                                || slot.CanAcceptPiece(this)
+                                || slot.getID == expectedId;
+            if (!acceptsPiece) continue;
+
+            closestCompatibleSlot = slot;
+            closestDistance = hit.distance;
+        }
+
+        return closestCompatibleSlot;
     }
 
     private void FindSlot()
@@ -567,12 +692,21 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
                     slotDoObjeto.SetSocketVisible(visible);
                     continue;
                 }
+                else
+                {
+                    s.SetActive(true);
+                }
 
                 Renderer r = s.GetComponent<Renderer>();
                 if (r != null) r.enabled = visible;
 
+                UsoFerramentaMontagem acaoFerramenta = s.GetComponent<UsoFerramentaMontagem>();
                 Collider c = s.GetComponent<Collider>();
-                if (c != null) c.enabled = visible;
+                if (c != null && (acaoFerramenta == null || acaoFerramenta.enabled))
+                {
+                    c.enabled = visible;
+                }
+
             }
         }
     }
