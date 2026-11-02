@@ -3,7 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// Representa um slot/encaixe onde uma peça (ComponenteBaseMontagem) pode ser instalada.
-/// Controla a compatibilidade com peças/tipos aceitos, a visibilidade do socket na cena,
+/// Controla a compatibilidade com peças aceitas, a visibilidade do socket na cena,
 /// a ocupação do slot e o progresso dos parafusos/conectores associados a este encaixe.
 /// </summary>
 public class IdentifiyerEncaixe : MonoBehaviour
@@ -12,7 +12,6 @@ public class IdentifiyerEncaixe : MonoBehaviour
 
     [SerializeField] private string myID;
     [SerializeField] private MeshFilter usedModel;
-    [SerializeField] private Tipo Tipo = Tipo.CPU;
 
     #endregion
 
@@ -20,8 +19,6 @@ public class IdentifiyerEncaixe : MonoBehaviour
 
     [Header("Compatibilidade de Peça")]
     [SerializeField] private List<string> acceptedPieceIDs = new List<string>();
-    [SerializeField] private List<Tipo> acceptedTypes = new List<Tipo>();
-
     #endregion
 
     #region Campos Serializados - Conectores & Parafusos
@@ -53,7 +50,6 @@ public class IdentifiyerEncaixe : MonoBehaviour
     #region Propriedades Públicas
 
     public List<string> AcceptedPieceIDs => acceptedPieceIDs;
-    public List<Tipo> AcceptedTypes => acceptedTypes;
     public string getID => myID;
     public bool hasScrew => hasScrewMiniStep;
     public bool IsOccupied => ocupante != null;
@@ -235,7 +231,7 @@ public class IdentifiyerEncaixe : MonoBehaviour
 
     /// <summary>
     /// Verifica se este encaixe aceita a peça informada, seja por lista de IDs aceitos,
-    /// por ID igual ao do slot ou pelo tipo da peça (lista de tipos aceitos).
+    /// por ID igual ao do slot.
     /// </summary>
     public bool CanAcceptPiece(ComponenteBaseMontagem piece)
     {
@@ -253,10 +249,7 @@ public class IdentifiyerEncaixe : MonoBehaviour
             return true;
         }
 
-        // Compara o tipo DA PEÇA (antes comparava o tipo do próprio slot, o que aceitava qualquer peça).
-        if (acceptedTypes.Count == 0) return false;
-
-        return piece.TipoPeca.HasValue && acceptedTypes.Contains(piece.TipoPeca.Value);
+        return false;
     }
 
     /// <summary>
@@ -278,17 +271,5 @@ public class IdentifiyerEncaixe : MonoBehaviour
         if (string.IsNullOrEmpty(pieceId) || acceptedPieceIDs.Contains(pieceId)) return;
         acceptedPieceIDs.Add(pieceId);
     }
-
-    /// <summary>
-    /// Adiciona um novo Tipo à lista de tipos aceitos, evitando duplicatas.
-    /// </summary>
-    public void AddAcceptedType(Tipo type)
-    {
-        if (!acceptedTypes.Contains(type))
-        {
-            acceptedTypes.Add(type);
-        }
-    }
-
     #endregion
 }

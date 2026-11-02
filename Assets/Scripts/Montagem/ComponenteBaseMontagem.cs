@@ -10,14 +10,20 @@ using TMPro;
 [RequireComponent(typeof(Rigidbody))]
 public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 {
-    #region Campos Serializados - Principais
+    #region Campos Serializados - Referências e Configuração Principal
 
     [Header("Configurações Principais")]
+    [Tooltip("Animações executadas ao selecionar ou soltar a peça.")]
     [SerializeField] private Animator anim;
+    [Tooltip("Dados configuráveis da peça, incluindo nome e identificador.")]
     [SerializeField] private SOPieceData InfoPeca;
+    [Tooltip("Estado atual de interação da peça.")]
     [SerializeField] private State cur_state;
+    [Tooltip("Malha usada para exibir a peça e criar o outline.")]
     [SerializeField] private MeshFilter myModel;
+    [Tooltip("Objetos de encaixe locais que podem ser habilitados após a montagem.")]
     [SerializeField] private List<GameObject> LocaisEncaixe;
+    [Tooltip("Efeito visual instanciado quando a peça é colocada.")]
     [SerializeField] private GameObject ParticlesPlace;
 
     #endregion
@@ -33,6 +39,7 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
     #region Campos Serializados - StepChecker
 
     [Header("Configurações do StepChecker")]
+    [Tooltip("Quando ativo, consulta as regras de progressão antes de permitir a interação.")]
     [SerializeField] private bool interactWithStepChecker = true;
 
     #endregion
@@ -40,10 +47,13 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
     #region Campos Serializados - Snapping / Arraste
 
     [Header("Configurações de Snapping")]
+    [Tooltip("Distância máxima usada para considerar um encaixe próximo.")]
     [SerializeField] private float snapDistance = 1.0f;
 
     [Header("Configurações de Arraste em 3D")]
+    [Tooltip("Camadas de superfície disponíveis para a interação de arraste.")]
     [SerializeField] private LayerMask surfaceLayerMask = ~0;
+    [Tooltip("Altura acima do slot ou da posição inicial enquanto a peça é arrastada.")]
     [SerializeField] private float dragHeightOffset = 0.05f;
 
     #endregion
@@ -55,24 +65,44 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
     #endregion
 
-    #region Estado Interno
+    #region Estado Interno - Arraste e Encaixe
 
+    // Posição usada como referência caso ainda não haja um slot-alvo.
     private Vector3 originalPosition;
+    // Câmera usada para converter a posição do mouse em um raio no mundo.
     private Camera mainCamera;
+    // Slot compatível atualmente destacado ou usado como destino do encaixe.
     private IdentifiyerEncaixe targetSlot;
+    // Indica que a peça está alinhada com o slot durante o arraste.
     private bool isSnapped = false;
+    // Indica que a peça já foi efetivamente colocada e não pode ser arrastada.
     private bool isPlaced = false;
+    // Impede que o primeiro frame após a seleção também mova a peça.
     private bool justSelected = false;
+    // Evita inscrever repetidamente o mesmo callback da câmera.
     private bool inscritoNaCamera = false;
-    private bool bloquearReselecao = false; // true no clique que soltou a peça (evita pegar de novo no mouse up)
+    // Evita que o mesmo clique usado para soltar selecione a peça novamente.
+    private bool bloquearReselecao = false;
+    // Referência reutilizada para operações de física.
     private Rigidbody rbCache;
 
+    #endregion
+
+    #region Estado Interno - Materiais do Outline
+
+    // Renderer da malha que recebe o material adicional de contorno.
     private Renderer meshRenderer;
+    // Materiais originais preservados para restaurar a aparência normal.
     private Material[] originalMaterials;
+    // Materiais originais acrescidos do material de contorno.
     private Material[] outlinedMaterials;
 
+    #endregion
+
+    #region Estado da Peça
+
     /// <summary>
-    /// Estado de seleção da peça.
+    /// Estados possíveis durante a interação do jogador com a peça.
     /// </summary>
     public enum State { Normal, Selected }
 
@@ -80,6 +110,9 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
     #region Propriedades Públicas
 
+    /// <summary>
+    /// Obtém o nome configurado nos dados da peça ou, se não houver, o nome do objeto.
+    /// </summary>
     public string PieceName
     {
         get
@@ -92,6 +125,10 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         }
     }
 
+    /// <summary>
+    /// Informa se a peça foi colocada e se todos os parafusos do slot foram concluídos.
+    /// Peças sem um slot associado são consideradas completas após serem colocadas.
+    /// </summary>
     public bool IsFullyAssembledWithScrews
     {
         get
@@ -105,15 +142,22 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         }
     }
 
+    /// <summary>Identificador configurado para esta peça; vazio quando não há dados associados.</summary>
     public string myID => InfoPeca != null ? InfoPeca.ID : "";
+
+    /// <summary>Indica se a peça foi colocada em um encaixe.</summary>
     public bool IsPlaced => isPlaced;
+
+    /// <summary>Indica se o jogador está segurando a peça.</summary>
     public bool NaMao => cur_state == State.Selected;
-    public Tipo? TipoPeca => InfoPeca != null ? InfoPeca.tipoDePeca : (Tipo?)null;
 
     #endregion
 
     #region Ciclo de Vida (Unity)
 
+    /// <summary>
+    /// Inicializa referências locais e prepara os materiais usados pelo outline.
+    /// </summary>
     private void Awake()
     {
         if (anim == null) anim = GetComponent<Animator>();
@@ -123,16 +167,21 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         SetupOutlineMaterial();
     }
 
+    /// <summary>Registra o callback de retorno da câmera quando o objeto é habilitado.</summary>
     private void OnEnable()
     {
         TrySubscribeToCamera();
     }
 
+    /// <summary>Remove o callback da câmera para evitar inscrições de objetos desativados.</summary>
     private void OnDisable()
     {
         UnsubscribeFromCamera();
     }
 
+    /// <summary>
+    /// Localiza o encaixe inicial, oculta os encaixes locais e configura a física da peça.
+    /// </summary>
     private void Start()
     {
         TrySubscribeToCamera();
@@ -148,6 +197,10 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         }
     }
 
+    /// <summary>
+    /// Atualiza a interação de arraste e processa o clique que solta a peça.
+    /// A peça não é atualizada enquanto está colocada ou durante estados que bloqueiam a interação.
+    /// </summary>
     private void Update()
     {
         if (isPlaced) return;
@@ -171,6 +224,7 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         }
     }
 
+    /// <summary>Mantém peças soltas dentro dos limites da mesa no passo de física.</summary>
     private void FixedUpdate()
     {
         ConfinarNaAreaDaMesa();
@@ -178,7 +232,7 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
     private void LateUpdate()
     {
-        // Só libera a re-seleção depois que o SelectionManager já processou o mouse up deste clique
+        // O SelectionManager processa o mouse up antes de liberar uma nova seleção.
         if (bloquearReselecao && Input.GetMouseButtonUp(0))
         {
             bloquearReselecao = false;
@@ -190,7 +244,8 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
     #region Área Limitada da Mesa
 
     /// <summary>
-    /// Peças soltas ficam dentro da AreaLimiteMesa. Na mão (Selected) ou encaixadas, não são afetadas.
+    /// Mantém peças soltas dentro da AreaLimiteMesa sem interferir em peças seguradas ou colocadas.
+    /// Quando a peça alcança um limite, zera somente a velocidade no eixo que foi restringido.
     /// </summary>
     private void ConfinarNaAreaDaMesa()
     {
@@ -214,6 +269,9 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
     #region Inscrição no Evento da Câmera
 
+    /// <summary>
+    /// Inscreve esta peça no evento de retorno à visão geral, se o controlador já estiver disponível.
+    /// </summary>
     private void TrySubscribeToCamera()
     {
         if (inscritoNaCamera) return;
@@ -225,6 +283,7 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         inscritoNaCamera = true;
     }
 
+    /// <summary>Remove a inscrição existente no evento de retorno à visão geral.</summary>
     private void UnsubscribeFromCamera()
     {
         if (!inscritoNaCamera) return;
@@ -241,9 +300,13 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
     #region Implementação de Hover (Ponteiro UI)
 
+    /// <summary>Exibe o nome da peça quando o ponteiro entra sobre ela.</summary>
     public void OnPointerEnter() => UpdateUIText(PieceName);
+
+    /// <summary>Limpa o nome exibido quando o ponteiro deixa a peça.</summary>
     public void OnPointerExit() => UpdateUIText("");
 
+    /// <summary>Atualiza o texto associado à peça, se houver um elemento de UI configurado.</summary>
     private void UpdateUIText(string text)
     {
         if (pieceNameText != null) pieceNameText.text = text;
@@ -253,6 +316,9 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
     #region Implementação de ISelectable
 
+    /// <summary>
+    /// Valida ferramenta e progressão antes de localizar um slot e iniciar a seleção.
+    /// </summary>
     public void OnSelect()
     {
         if (bloquearReselecao) return;
@@ -274,11 +340,15 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         SelectPeca();
     }
 
+    /// <summary>Verifica se a ferramenta exigida está selecionada na interface.</summary>
     private static bool IsRequiredToolSelected(string toolName)
     {
         return UiController.Instance != null && UiController.Instance.IsToolSelected(toolName);
     }
 
+    /// <summary>
+    /// Informa por meio do StepChecker ou do log que a ferramenta exigida não está selecionada.
+    /// </summary>
     private static void NotificarFerramentaNecessaria(string toolName)
     {
         string message = $"Selecione '{toolName}' na Hotbar para pegar peças.";
@@ -288,6 +358,7 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
             Debug.LogWarning($"[ComponenteBaseMontagem] {message}");
     }
 
+    /// <summary>Encerra a seleção atual e devolve a peça à física normal.</summary>
     public void OnDeselect() => Deselect();
 
     /// <summary>
@@ -324,6 +395,9 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
     #region Seleção / Desseleção
 
+    /// <summary>
+    /// Inicia a seleção: desativa a física, mostra o outline e apresenta o slot compatível.
+    /// </summary>
     protected virtual void SelectPeca()
     {
         if (isPlaced || cur_state == State.Selected) return;
@@ -333,7 +407,7 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
         if (mainCamera == null) mainCamera = Camera.main;
 
-        // DESLIGA a física e gravidade enquanto segura para o mouse controlar suavemente
+        // Desliga a física enquanto o mouse controla diretamente a posição da peça.
         Rigidbody rb = GetComponent<Rigidbody>();
         if (rb != null)
         {
@@ -353,11 +427,14 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         }
     }
 
+    /// <summary>
+    /// Finaliza a seleção sem colocar a peça; a física volta a controlar sua posição.
+    /// </summary>
     protected virtual void Deselect()
     {
         if (isPlaced) return;
 
-        // Solta a peça ONDE ESTÁ (a física assume e a área da mesa a mantém dentro dos limites)
+        // A peça permanece onde foi solta; a física e os limites da mesa cuidam do restante.
         cur_state = State.Normal;
         isSnapped = false;
 
@@ -380,6 +457,9 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
     #region Arraste e Snapping
 
+    /// <summary>
+    /// Move a peça sobre um plano horizontal e alinha sua posição e rotação ao slot próximo.
+    /// </summary>
     private void HandleDraggingAndSnapping()
     {
         if (mainCamera == null) mainCamera = Camera.main;
@@ -414,6 +494,10 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         isSnapped = false;
     }
 
+    /// <summary>
+    /// Resolve o slot no momento da soltura e conclui a colocação ou devolve a peça à física.
+    /// A busca sob o cursor tem prioridade; em seguida, é considerado o slot compatível mais próximo.
+    /// </summary>
     private void DropObject()
     {
         bloquearReselecao = true;
@@ -429,7 +513,7 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
         if (isSnapped && targetSlot != null)
         {
-            // Encaixou perfeitamente no slot
+            // Confirma a transformação antes de marcar o slot como ocupado.
             transform.position = targetSlot.transform.position;
             transform.rotation = targetSlot.transform.rotation;
 
@@ -443,7 +527,7 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
             GameManager.Instance.ClearObject();
             targetSlot.UpdateModel(null);
 
-            // Desliga collider principal e trava a física de vez
+            // O slot agora controla a colocação; colisão e movimento da peça são desativados.
             Collider col = GetComponent<Collider>();
             if (col != null) col.enabled = false;
             if (rb != null) rb.isKinematic = true;
@@ -465,7 +549,7 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         {
             NotificarEncaixeIncompativelProximo();
 
-            // Soltou fora: LIGA a física usando o MeshCollider para colidir com a mesa
+            // Sem encaixe compatível, a peça permanece no local e volta a colidir com a mesa.
             cur_state = State.Normal;
             isSnapped = false;
 
@@ -483,6 +567,9 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         }
     }
 
+    /// <summary>
+    /// Se a soltura ocorreu perto de um slot incompatível, comunica ao StepChecker qual foi.
+    /// </summary>
     private void NotificarEncaixeIncompativelProximo()
     {
         if (!interactWithStepChecker || StepChecker.Instance == null) return;
@@ -520,12 +607,21 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
     #region Busca e Gestão de Slots
 
+    #region Identificação e Disponibilidade
+
+    /// <summary>
+    /// Obtém o identificador da peça, preferindo o valor configurado nos dados associados.
+    /// </summary>
     private string GetPieceId()
     {
         if (InfoPeca != null && !string.IsNullOrEmpty(InfoPeca.ID)) return InfoPeca.ID;
         return myID;
     }
 
+    /// <summary>
+    /// Verifica se o slot pode ser usado, considerando ocupação e relação com a peça pai.
+    /// Slots de uma peça pai só podem ser usados quando essa peça já está colocada.
+    /// </summary>
     private bool IsSlotAvailableForUse(IdentifiyerEncaixe slot)
     {
         if (slot == null) return false;
@@ -542,6 +638,11 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         return true;
     }
 
+    #endregion
+
+    #region Localização de Encaixes
+
+    /// <summary>Localiza o slot compatível disponível mais próximo dentro do limite de snapping.</summary>
     private IdentifiyerEncaixe FindNearestCompatibleSlot(Vector3 position)
     {
         IdentifiyerEncaixe nearestSlot = null;
@@ -568,6 +669,9 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         return nearestSlot;
     }
 
+    /// <summary>
+    /// Procura sob o cursor um slot compatível, escolhendo o primeiro atingido pela câmera.
+    /// </summary>
     private IdentifiyerEncaixe FindCompatibleSlotUnderCursor()
     {
         Camera camera = mainCamera != null ? mainCamera : Camera.main;
@@ -603,6 +707,9 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         return closestCompatibleSlot;
     }
 
+    /// <summary>
+    /// Localiza o encaixe compatível da peça, priorizando sua hierarquia e depois a cena inteira.
+    /// </summary>
     private void FindSlot()
     {
         targetSlot = null;
@@ -641,6 +748,9 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         }
     }
 
+    /// <summary>
+    /// Percorre os encaixes da hierarquia atual e de seus ancestrais, incluindo objetos inativos.
+    /// </summary>
     private IEnumerable<IdentifiyerEncaixe> FindCompatibleSlotsInCurrentHierarchy()
     {
         Transform current = transform;
@@ -653,7 +763,13 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
             current = current.parent;
         }
     }
+    #endregion
 
+    #region Visibilidade
+
+    /// <summary>
+    /// Atualiza a visibilidade dos encaixes quando a câmera retorna à visão geral.
+    /// </summary>
     private void HandleReturnToOverview()
     {
         if (!isPlaced)
@@ -669,6 +785,10 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         SetLocalSlotsVisible(true);
     }
 
+    /// <summary>
+    /// Mostra ou oculta os encaixes associados a esta peça e seus elementos visuais/interativos.
+    /// Peças ainda não colocadas não exibem seus encaixes locais como destinos ativos.
+    /// </summary>
     private void SetLocalSlotsVisible(bool visible)
     {
         if (!isPlaced && visible) return;
@@ -713,8 +833,13 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
     #endregion
 
-    #region Zoom de Câmera / Minigame de Parafusos
+    #endregion
 
+    #region Zoom de Câmera e Minigame de Parafusos
+
+    /// <summary>
+    /// Inicia o minigame de parafusos quando necessário e direciona a câmera ao ponto de foco.
+    /// </summary>
     private void TriggerCameraZoom()
     {
         FocusPoint targetFocus = GetComponentInChildren<FocusPoint>();
@@ -748,6 +873,9 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
     #region Outline Visual
 
+    /// <summary>
+    /// Guarda os materiais originais e prepara uma variante com o material de contorno ao final.
+    /// </summary>
     private void SetupOutlineMaterial()
     {
         meshRenderer = myModel != null ? myModel.GetComponent<Renderer>() : GetComponent<Renderer>();
@@ -759,6 +887,7 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         outlinedMaterials[outlinedMaterials.Length - 1] = outlineMaterial;
     }
 
+    /// <summary>Alterna entre os materiais originais e a variante que inclui o outline.</summary>
     private void SetOutlineVisible(bool visible)
     {
         if (meshRenderer == null || outlineMaterial == null) return;

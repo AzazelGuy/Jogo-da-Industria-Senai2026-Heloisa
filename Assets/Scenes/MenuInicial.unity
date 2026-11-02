@@ -1573,6 +1573,7 @@ MonoBehaviour:
   menuModos: {fileID: 443237763}
   velocidadeTransicao: 4
   alturaEscondidoY: 1080
+  MenuOST: {fileID: 8300000, guid: d0e4df41e7e50f7449607b25ed636bff, type: 3}
 --- !u!114 &756217925
 MonoBehaviour:
   m_ObjectHideFlags: 0
