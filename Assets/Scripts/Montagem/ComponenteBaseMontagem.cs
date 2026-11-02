@@ -896,3 +896,8 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
 
     #endregion
 }
+//Puta que pariu esse código
+/*
+Nunca tente fazer um jogo assim crianças! 
+Senão eu vou estragular todas
+*/

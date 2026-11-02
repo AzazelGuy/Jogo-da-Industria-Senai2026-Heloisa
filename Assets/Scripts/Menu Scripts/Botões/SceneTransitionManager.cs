@@ -7,7 +7,7 @@ public class SceneTransitionManager : MonoBehaviour
     public void ModoMontagem()
     {
         PlayAudio();
-        LoadingScreen.Carregar("Tutorial");
+        LoadingScreen.Carregar("TutorialMontagem");
     }
 
     public void PlayAudio()
@@ -17,6 +17,6 @@ public class SceneTransitionManager : MonoBehaviour
     public void ModoReparo()
     {
         PlayAudio();
-        LoadingScreen.Carregar("Fase1");
+        LoadingScreen.Carregar("Tutorial");
     }
 }

@@ -899,6 +899,14 @@ PrefabInstance:
       propertyPath: m_audioClip
       value: 
       objectReference: {fileID: 8300000, guid: d0e4df41e7e50f7449607b25ed636bff, type: 3}
+    - target: {fileID: 8411716894356959696, guid: 276235620ac1c204b8fde147fb79d5ee, type: 3}
+      propertyPath: musicVolume
+      value: 0.269
+      objectReference: {fileID: 0}
+    - target: {fileID: 8411716894356959696, guid: 276235620ac1c204b8fde147fb79d5ee, type: 3}
+      propertyPath: voiceSource
+      value: 
+      objectReference: {fileID: 1849363478}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1461,7 +1469,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 95.64077, y: -74.5632}
+  m_AnchoredPosition: {x: 672, y: -322}
   m_SizeDelta: {x: 1740.5745, y: 958.2596}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &718643622
@@ -1484,7 +1492,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 18bad451d42ad9346a83ca58881d62fe, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 26d9a7045d62c5b48a7dcfcdf95e0f0f, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2390,7 +2398,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -11.073, y: 132}
+  m_AnchoredPosition: {x: -573, y: 446}
   m_SizeDelta: {x: 1762.7196, y: 1115.9978}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1257897013
@@ -3710,8 +3718,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "Fonte de Dislexia\r"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 0d56915c3a7c783e499b59e54045cb31, type: 2}
+  m_sharedMaterial: {fileID: -2374025379260385347, guid: 0d56915c3a7c783e499b59e54045cb31, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -3735,7 +3743,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 34.35
+  m_fontSize: 30.65
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -3787,6 +3795,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1833827558}
   m_CullTransparentMesh: 1
+--- !u!82 &1849363478 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 2556705560230866056, guid: 276235620ac1c204b8fde147fb79d5ee, type: 3}
+  m_PrefabInstance: {fileID: 398080803}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1894343479
 GameObject:
   m_ObjectHideFlags: 0
