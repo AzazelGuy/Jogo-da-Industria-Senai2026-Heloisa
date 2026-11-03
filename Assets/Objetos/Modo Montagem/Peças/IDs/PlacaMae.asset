@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b3fcbf59c0c42441ac767de0c63c77b, type: 3}
+  m_Name: PlacaMae
+  m_EditorClassIdentifier: 
+  ID: pc_Motherboard_P
+  Nome: "Placa M\xE3e Pequena"
+  Descricao: 
+  tipoDePeca: 2
+  modelos: []
+  materiais: []
+  prefab:
+  - {fileID: 7111040133705626347, guid: 189e6b3c62a244b47abf22e9f7971c75, type: 3}

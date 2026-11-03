@@ -1,0 +1,22 @@
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class SceneTransitionManager : MonoBehaviour
+{
+    [SerializeField] AudioClip select;
+    public void ModoMontagem()
+    {
+        PlayAudio();
+        LoadingScreen.Carregar("TutorialMontagem");
+    }
+
+    public void PlayAudio()
+    {
+        AudioManager.Instance.PlaySFX(select);
+    }
+    public void ModoReparo()
+    {
+        PlayAudio();
+        LoadingScreen.Carregar("Tutorial");
+    }
+}
