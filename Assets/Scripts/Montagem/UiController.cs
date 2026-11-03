@@ -36,6 +36,10 @@ public class UiController : MonoBehaviour
     [SerializeField] TextMeshProUGUI nomedoItemDisplay;
     private int posItemAtual;
 
+    [Header("---Caixa de Peças---")]
+    [Tooltip("Se vazio, usa a CaixaPecasUi que existir na cena.")]
+    [SerializeField] private CaixaPecasUi caixaUi;
+
     #endregion
 
     #region Ciclo de Vida (Unity)
@@ -286,6 +290,19 @@ public class UiController : MonoBehaviour
     public bool IsToolSelected(string toolName)
     {
         return string.Equals(FerramentaSelecionadaAtual, toolName, System.StringComparison.Ordinal);
+    }
+
+    public void ShowBoxUI()
+    {
+        if (caixaUi == null) caixaUi = CaixaPecasUi.Instance;
+
+        if (caixaUi == null)
+        {
+            Debug.LogWarning("[CaixadePecasAbrirMenu] Nenhuma CaixaPecasUi encontrada na cena!", this);
+            return;
+        }
+
+        caixaUi.AbrirCaixa();
     }
 
     public TextMeshProUGUI textNameUI => nameText;

@@ -550,4 +550,8 @@ public class StepChecker : MonoBehaviour
     }
 
     #endregion
+
+
+    public string currStep => etapas[etapaAtual].nome;
+    public string currStepID => etapas[etapaAtual].pecas[0].pieceID;
 }

@@ -49,9 +49,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   myID: pc_CPU
   usedModel: {fileID: 4581132757794785714}
-  Tipo: 0
   acceptedPieceIDs: []
-  acceptedTypes: 
   ScrewsPositions: []
   CompletedScrews: 
   hasScrewMiniStep: 0
@@ -139,9 +137,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   myID: pc_Ram
   usedModel: {fileID: 6303616124895024101}
-  Tipo: 7
   acceptedPieceIDs: []
-  acceptedTypes: 
   ScrewsPositions: []
   CompletedScrews: 
   hasScrewMiniStep: 0
@@ -229,9 +225,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   myID: pc_Ram
   usedModel: {fileID: 6910199463075037420}
-  Tipo: 7
   acceptedPieceIDs: []
-  acceptedTypes: 
   ScrewsPositions: []
   CompletedScrews: 
   hasScrewMiniStep: 0
@@ -319,9 +313,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   myID: pc_SSD
   usedModel: {fileID: 2874940001572831681}
-  Tipo: 4
   acceptedPieceIDs: []
-  acceptedTypes: 
   ScrewsPositions: []
   CompletedScrews: 
   hasScrewMiniStep: 0
@@ -409,9 +401,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   myID: pc_GPU_P
   usedModel: {fileID: 4988270402704114011}
-  Tipo: 4
   acceptedPieceIDs: []
-  acceptedTypes: 
   ScrewsPositions: []
   CompletedScrews: 
   hasScrewMiniStep: 0
@@ -499,9 +489,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   myID: pc_Ram
   usedModel: {fileID: 6995517073030783706}
-  Tipo: 7
   acceptedPieceIDs: []
-  acceptedTypes: 
   ScrewsPositions: []
   CompletedScrews: 
   hasScrewMiniStep: 0
@@ -589,9 +577,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   myID: pc_Ram
   usedModel: {fileID: 900178096115335440}
-  Tipo: 7
   acceptedPieceIDs: []
-  acceptedTypes: 
   ScrewsPositions: []
   CompletedScrews: 
   hasScrewMiniStep: 0
@@ -641,7 +627,6 @@ GameObject:
   - component: {fileID: 5617411113515629205}
   - component: {fileID: 2893300399888284769}
   - component: {fileID: 6104775086706791227}
-  - component: {fileID: 3291893945208391200}
   - component: {fileID: 3164488212102364166}
   m_Layer: 6
   m_Name: PlacaMae_Pequena
@@ -698,7 +683,6 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 256
   dragHeightOffset: 0.33
-  outlineMaterial: {fileID: 2100000, guid: 79bacae4d97e6cb4dbd4c8e7d8ea4871, type: 2}
 --- !u!65 &6104775086706791227
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -720,33 +704,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 12.978628, y: 2.0898113, z: 12.667595}
   m_Center: {x: 0.9664154, y: -0.24585536, z: 0}
---- !u!54 &3291893945208391200
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7111040133705626347}
-  serializedVersion: 5
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 1
 --- !u!114 &3164488212102364166
 MonoBehaviour:
   m_ObjectHideFlags: 0

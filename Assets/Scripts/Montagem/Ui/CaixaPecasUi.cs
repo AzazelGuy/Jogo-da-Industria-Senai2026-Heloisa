@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
+using static UnityEditor.Progress;
 
 /// <summary>
 /// Controla a UI da Caixa de Peças e Ferramentas.
@@ -50,6 +52,9 @@ public class CaixaPecasUi : MonoBehaviour
 
     [Tooltip("Limite de peças no total, somando todos os tipos. 0 = sem limite total.")]
     [SerializeField, Min(0)] private int limiteTotalNaMesa = 0;
+
+    [Tooltip("Local para spawnar as peças.")]
+    [SerializeField] private List<Transform> LocaideSpawn;
 
     #endregion
 
@@ -220,6 +225,12 @@ public class CaixaPecasUi : MonoBehaviour
     /// </summary>
     public void SpawnarPecaPeloSO(SOPieceData infoPeca)
     {
+        if (StepChecker.Instance.currStepID != infoPeca.ID)
+        {
+            Debug.Log($"Não está na hora de usar essa peça! Confira a etapa atual");
+            if (StepChecker.Instance != null) StepChecker.Instance.NotificarBloqueio($"Não está na hora de usar essa peça! Confira a etapa atual");
+            return;
+        }
         if (infoPeca == null || infoPeca.prefab == null || infoPeca.prefab.Count == 0)
         {
             Debug.LogWarning("[CaixaPecasUI] SOPieceData inválido ou sem prefabs cadastrados na lista!");
@@ -242,11 +253,10 @@ public class CaixaPecasUi : MonoBehaviour
             return;
         }
 
-        Vector3 posicaoSpawn = pontoSpawnMesa != null ? pontoSpawnMesa.position : Vector3.zero;
-        Quaternion rotacaoSpawn = pontoSpawnMesa != null ? pontoSpawnMesa.rotation : Quaternion.identity;
+        int pos = UnityEngine.Random.Range(0, LocaideSpawn.Count);
 
         // Instancia a peça na mesa
-        GameObject novaPeca = Instantiate(prefabPeca, posicaoSpawn, rotacaoSpawn);
+        GameObject novaPeca = Instantiate(prefabPeca, LocaideSpawn[pos]);
         RegistrarSpawn(infoPeca, novaPeca);
 
         Debug.Log($"[CaixaPecasUI] Peça '{infoPeca.Nome}' spawnada com sucesso na mesa!");
@@ -334,25 +344,5 @@ public class CaixaPecasUi : MonoBehaviour
     }
     #endregion
 
-    #region Guardar Peças
-
-    /// <summary>
-    /// Devolve uma peça à caixa: limpa o estado dela, remove do registro (liberando o limite) e destrói o objeto.
-    /// Peças já encaixadas não podem ser guardadas.
-    /// </summary>
-    public void GuardarPeca(ComponenteBaseMontagem peca)
-    {
-        if (peca == null || peca.IsPlaced) return;
-
-        peca.PrepararParaGuardar();
-
-        foreach (KeyValuePair<SOPieceData, List<GameObject>> par in pecasSpawnadas)
-        {
-            if (par.Value.Remove(peca.gameObject)) break;
-        }
-
-        Destroy(peca.gameObject);
-    }
-
-    #endregion
+  
 }

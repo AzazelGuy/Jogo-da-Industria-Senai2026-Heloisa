@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 9197595130670485363}
   - component: {fileID: 3718254177054352550}
   - component: {fileID: 2368083559657558520}
-  - component: {fileID: 9038021821980335777}
   m_Layer: 6
   m_Name: Armazenamento Objeto
   m_TagString: Untagged
@@ -60,7 +59,6 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 256
   dragHeightOffset: 0.33
-  outlineMaterial: {fileID: 2100000, guid: 79bacae4d97e6cb4dbd4c8e7d8ea4871, type: 2}
 --- !u!65 &2368083559657558520
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -76,39 +74,12 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 2.8083444}
   m_Center: {x: 0, y: -0, z: 0}
---- !u!54 &9038021821980335777
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1817408540934440304}
-  serializedVersion: 5
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 1
 --- !u!1001 &2894031823801537336
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -309,17 +309,6 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
     public void OnDeselect() => Deselect();
 
     /// <summary>
-    /// Botão direito: guarda a peça de volta na caixa (se ela veio da caixa e não está encaixada).
-    /// </summary>
-    public void OnRightClick()
-    {
-        if (isPlaced) return;
-        if (CaixaPecasUi.Instance == null) return;
-
-        CaixaPecasUi.Instance.GuardarPeca(this);
-    }
-
-    /// <summary>
     /// Limpa o que a peça deixou espalhado (modelo fantasma no slot, estado de seleção, textos)
     /// antes de ser destruída pela caixa.
     /// </summary>
