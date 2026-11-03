@@ -249,14 +249,6 @@ public class CaixaPecasUi : MonoBehaviour
         GameObject novaPeca = Instantiate(prefabPeca, posicaoSpawn, rotacaoSpawn);
         RegistrarSpawn(infoPeca, novaPeca);
 
-        // Garante que a física e gravidade estão ativas ao cair na mesa
-        Rigidbody rb = novaPeca.GetComponent<Rigidbody>();
-        if (rb != null)
-        {
-            rb.isKinematic = false;
-            rb.useGravity = true;
-        }
-
         Debug.Log($"[CaixaPecasUI] Peça '{infoPeca.Nome}' spawnada com sucesso na mesa!");
 
         // Fecha a UI da caixa após selecionar a peça
@@ -277,14 +269,14 @@ public class CaixaPecasUi : MonoBehaviour
 
         if (limiteTotalNaMesa > 0 && ContarTotal() >= limiteTotalNaMesa)
         {
-            motivo = $"Limite de {limiteTotalNaMesa} peças na mesa atingido. Guarde alguma (botão direito) para pegar outra.";
+            motivo = $"Limite de {limiteTotalNaMesa} peças na mesa atingido.";
             return false;
         }
 
         int limite = ObterLimite(peca);
         if (ContarDaPeca(peca) >= limite)
         {
-            motivo = $"Você já pegou o máximo de \"{peca.Nome}\" ({limite}). Guarde uma (botão direito) para pegar outra.";
+            motivo = $"Você já pegou o máximo de \"{peca.Nome}\" ({limite}).";
             return false;
         }
 
@@ -340,45 +332,26 @@ public class CaixaPecasUi : MonoBehaviour
 
         lista.Add(instancia);
     }
-
-    private SOPieceData EncontrarOrigem(GameObject instancia)
-    {
-        foreach (KeyValuePair<SOPieceData, List<GameObject>> par in pecasSpawnadas)
-        {
-            if (par.Value.Contains(instancia)) return par.Key;
-        }
-
-        return null;
-    }
-
     #endregion
 
     #region Guardar Peças
 
     /// <summary>
-    /// Guarda a peça de volta na caixa: destrói a instância e libera uma vaga no limite.
-    /// Só funciona para peças que vieram da caixa e que NÃO estão encaixadas.
+    /// Devolve uma peça à caixa: limpa o estado dela, remove do registro (liberando o limite) e destrói o objeto.
+    /// Peças já encaixadas não podem ser guardadas.
     /// </summary>
-    public bool GuardarPeca(ComponenteBaseMontagem peca)
+    public void GuardarPeca(ComponenteBaseMontagem peca)
     {
-        if (peca == null || peca.IsPlaced) return false;
+        if (peca == null || peca.IsPlaced) return;
 
-        SOPieceData origem = EncontrarOrigem(peca.gameObject);
-        if (origem == null)
+        peca.PrepararParaGuardar();
+
+        foreach (KeyValuePair<SOPieceData, List<GameObject>> par in pecasSpawnadas)
         {
-            Debug.LogWarning($"[CaixaPecasUI] '{peca.name}' não foi spawnada pela caixa, então não pode ser guardada.");
-            return false;
+            if (par.Value.Remove(peca.gameObject)) break;
         }
 
-        // Limpa o que a peça deixou espalhado e avisa o SelectionManager ANTES de destruir
-        peca.PrepararParaGuardar();
-        if (SelectionManager.Instance != null) SelectionManager.Instance.Esquecer(peca);
-
-        pecasSpawnadas[origem].Remove(peca.gameObject);
         Destroy(peca.gameObject);
-
-        Debug.Log($"[CaixaPecasUI] Peça '{origem.Nome}' guardada na caixa. Restantes para pegar: {QuantidadeRestante(origem)}");
-        return true;
     }
 
     #endregion

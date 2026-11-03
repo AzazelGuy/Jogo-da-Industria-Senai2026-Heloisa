@@ -7,31 +7,24 @@ using UnityEngine;
 /// </summary>
 public class ObjectSpawner : MonoBehaviour
 {
+
+    public static ObjectSpawner Instance { get; private set; }
+
     #region Campos Serializados
 
-    [SerializeField] private List<GameObject> ObjectstoSpawn;
-    [SerializeField] private List<GameObject> PlacesToSpawn;
-
-    #endregion
-
-    #region Estado Interno
-
-    private int indice = 0;
+    [SerializeField] private List<Transform> LocaideSpawn;
 
     #endregion
 
     #region Ciclo de Vida (Unity)
 
-    private void Start()
+    public void SpawnItem(GameObject item)
     {
-        // ATENÇÃO: assume que ObjectstoSpawn e PlacesToSpawn têm o mesmo tamanho;
-        // se PlacesToSpawn tiver menos elementos, isso lançará um IndexOutOfRangeException.
-        foreach (GameObject obj in ObjectstoSpawn)
-        {
-            GameObject curobjt = Instantiate(obj, PlacesToSpawn[indice].transform.position, Quaternion.identity);
-            indice++;
-        }
+        int pos = Random.Range(0, LocaideSpawn.Count);
+
+        Instantiate(item, LocaideSpawn[pos]);
     }
+
 
     #endregion
 }

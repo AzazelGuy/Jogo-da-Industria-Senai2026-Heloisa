@@ -3126,6 +3126,7 @@ GameObject:
   m_Component:
   - component: {fileID: 799599550}
   - component: {fileID: 799599556}
+  - component: {fileID: 799599557}
   m_Layer: 10
   m_Name: CaixadeItems
   m_TagString: Untagged
@@ -3170,6 +3171,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 8.1353245, y: 9.395342, z: 11.87939}
   m_Center: {x: 0, y: 2.5789127, z: 0}
+--- !u!114 &799599557
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 799599549}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa8add1bc083d1448b0135abe8c48bf9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  LocaideSpawn: []
 --- !u!1 &801899729
 GameObject:
   m_ObjectHideFlags: 0

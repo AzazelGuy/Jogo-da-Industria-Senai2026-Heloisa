@@ -42,7 +42,7 @@ public class CliqueComputador : MonoBehaviour
 
     [Header("--- INTERFACE DA HUD (SINTOMAS - DIREITA) ---")]
     public RectTransform painelSintomas;
-    public float posXEscondidoSintomas = 600f;
+    public float posXEscondidoSintomas = 257f;
     public float posXParcialSintomas = 450f;
     public float posXVisivelSintomas = 0f;
 
