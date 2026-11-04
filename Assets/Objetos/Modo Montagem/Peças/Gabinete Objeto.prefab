@@ -531,6 +531,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 757d4baefc5bb87e5ae290ac63a48091, type: 2}
+  - {fileID: 2100000, guid: 79bacae4d97e6cb4dbd4c8e7d8ea4871, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -959,6 +960,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 99f51670737e07613baa9eede08a1e93, type: 2}
+  - {fileID: 2100000, guid: 79bacae4d97e6cb4dbd4c8e7d8ea4871, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1230,6 +1232,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 9197595130670485363}
     m_Modifications:
+    - target: {fileID: 1801546137413467362, guid: 00bffebdd27668c458c2cb476da5a944, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1801546137413467362, guid: 00bffebdd27668c458c2cb476da5a944, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 79bacae4d97e6cb4dbd4c8e7d8ea4871, type: 2}
     - target: {fileID: 3949002606416733140, guid: 00bffebdd27668c458c2cb476da5a944, type: 3}
       propertyPath: m_Name
       value: PecaFonte_P

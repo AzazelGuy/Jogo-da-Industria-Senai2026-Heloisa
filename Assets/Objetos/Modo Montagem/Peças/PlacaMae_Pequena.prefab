@@ -1037,6 +1037,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 47b9dd4da2b9e88c9be21350569d3bfb, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 47b9dd4da2b9e88c9be21350569d3bfb, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 79bacae4d97e6cb4dbd4c8e7d8ea4871, type: 2}
     - target: {fileID: 919132149155446097, guid: 47b9dd4da2b9e88c9be21350569d3bfb, type: 3}
       propertyPath: m_Name
       value: PlacaMae_P

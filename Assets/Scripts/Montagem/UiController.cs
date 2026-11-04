@@ -127,6 +127,7 @@ public class UiController : MonoBehaviour
         if (b)
         {
             _fadeRoutine = StartCoroutine(FadeIn(_winUi, fadeDuration));
+            Cursor.visible = true;
         }
         else
         {
@@ -249,7 +250,7 @@ public class UiController : MonoBehaviour
     /// </summary>
     private void AtualizarHotbar()
     {
-        if (TotalItensHotbar <= 0) return;
+        if (TotalItensHotbar <= 0 || _winUi.isActiveAndEnabled) return;
 
         posItemAtual = Mathf.Clamp(posItemAtual, 0, TotalItensHotbar - 1);
 
@@ -271,6 +272,7 @@ public class UiController : MonoBehaviour
     /// </summary>
     private void AtualizarCursor()
     {
+        if (_winUi.isActiveAndEnabled) return;
         Image alvo = null;
 
         if (cursoresHotbarItens != null && posItemAtual >= 0 && posItemAtual < cursoresHotbarItens.Length)
@@ -303,6 +305,7 @@ public class UiController : MonoBehaviour
     /// </summary>
     public void ReturntoMainMenu()
     {
+        Cursor.visible = true;
         LoadingScreen.Carregar("MenuInicial");
         Destroy(gameObject);
         if (StepChecker.Instance != null) Destroy(StepChecker.Instance.gameObject);

@@ -57,6 +57,7 @@ public class PauseMenuActions : MonoBehaviour
     {
         if (pauseMenuGroup == null || isPaused == paused) return;
 
+        Cursor.visible = true;
         isPaused = paused;
         Time.timeScale = paused ? 0f : 1f;
 
@@ -124,6 +125,7 @@ public class PauseMenuActions : MonoBehaviour
 
     public void ReturntoMainMenu()
     {
+        Cursor.visible = true;
         Time.timeScale = 1f; // senão o menu principal carrega congelado
         instance = null;
         Destroy(gameObject);

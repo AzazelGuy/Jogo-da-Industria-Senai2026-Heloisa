@@ -616,16 +616,16 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 137735469}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: 0.40797365, w: -0.9129938}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 23155111}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -48.155}
   m_AnchorMin: {x: 0.58000004, y: 0.51000005}
   m_AnchorMax: {x: 0.58000004, y: 0.51000005}
-  m_AnchoredPosition: {x: -8.8116, y: -8.3929}
+  m_AnchoredPosition: {x: 19.6, y: -29}
   m_SizeDelta: {x: 100.0466, y: 160.0746}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &137735471
@@ -2690,11 +2690,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 567195310843758000, guid: 72561b31fd9bc7d48a7562f655146362, type: 3}
       propertyPath: m_Interactable
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 567195310843758000, guid: 72561b31fd9bc7d48a7562f655146362, type: 3}
       propertyPath: m_BlocksRaycasts
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1240258915007332851, guid: 72561b31fd9bc7d48a7562f655146362, type: 3}
       propertyPath: m_Name

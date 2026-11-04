@@ -40,14 +40,6 @@ public class GameManager : MonoBehaviour
     private void Update()
     {
         if (MistakeEvent.IsFeedbackActive) return;
-
-        // Atalho de reinício: recarrega a cena atual e limpa o estado da UI/StepChecker
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-            UiController.Instance.ChangeActive(false);
-            Destroy(StepChecker.Instance.gameObject);
-        }
         if (SceneManager.GetActiveScene().name != "ModoMontagem")
         {
             Destroy(gameObject);

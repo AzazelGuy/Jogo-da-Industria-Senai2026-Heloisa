@@ -152,6 +152,10 @@ public class ComponenteBaseMontagem : MonoBehaviour, ISelectable
         if (anim == null) anim = GetComponent<Animator>();
         originalPosition = transform.position;
         mainCamera = Camera.main;
+        foreach(GameObject g in LocaisEncaixe)
+        {
+            g.SetActive(false);
+        }
     }
 
     /// <summary>Registra o callback de retorno da câmera quando o objeto é habilitado.</summary>

@@ -94,9 +94,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   zoomTarget: 1
-  cameraOffset: {x: 0, y: 0, z: 9.88}
+  cameraOffset: {x: 0, y: 0, z: 11}
   targetEulerAngles: {x: 90, y: 0, z: 0}
-  focusedFOV: 50
+  focusedFOV: 70
 --- !u!1001 &2993069125024231324
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -145,6 +145,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 43d0b17497b4e9c09880680e972eba71, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 43d0b17497b4e9c09880680e972eba71, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 79bacae4d97e6cb4dbd4c8e7d8ea4871, type: 2}
     - target: {fileID: 919132149155446097, guid: 43d0b17497b4e9c09880680e972eba71, type: 3}
       propertyPath: m_Name
       value: Cooler_Tras

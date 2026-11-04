@@ -7,7 +7,6 @@ public class CursorUI : MonoBehaviour
     public GameObject cursorGO;
     private void Start()
     {
-        Cursor.visible = false;
     }
 
     void Update()
