@@ -1,9 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using UnityEngine;
-using static UnityEditor.Progress;
 
 /// <summary>
 /// Controla a UI da Caixa de Peças e Ferramentas.
@@ -40,8 +38,10 @@ public class CaixaPecasUi : MonoBehaviour
     [SerializeField] private float fadeDuration = 0.3f;
 
     [Header("Spawn na Mesa")]
-    [Tooltip("Ponto de referência na mesa onde a peça deve aparecer ao ser selecionada.")]
-    [SerializeField] private Transform pontoSpawnMesa;
+    [Tooltip("Ponto de onde as peças começam o voo até a mesa.")]
+    [SerializeField] private Transform pontoPartidaVoo;
+    [SerializeField, Min(0.1f)] private float duracaoVoo = 1f;
+    [SerializeField, Min(0f)] private float alturaCurvaVoo = 0.75f;
 
     [Header("Limite de Peças")]
     [Tooltip("Quantas cópias de cada peça podem existir ao mesmo tempo (na mesa ou já encaixadas).")]
@@ -65,6 +65,8 @@ public class CaixaPecasUi : MonoBehaviour
 
     // Peças que a caixa já spawnou (e ainda existem), agrupadas pelo SOPieceData de origem
     private readonly Dictionary<SOPieceData, List<GameObject>> pecasSpawnadas = new Dictionary<SOPieceData, List<GameObject>>();
+    private readonly Dictionary<Transform, GameObject> pecasNosLocaisSpawn = new Dictionary<Transform, GameObject>();
+    private readonly HashSet<GameObject> pecasEmVoo = new HashSet<GameObject>();
 
     #endregion
 
@@ -225,23 +227,30 @@ public class CaixaPecasUi : MonoBehaviour
     /// </summary>
     public void SpawnarPecaPeloSO(SOPieceData infoPeca)
     {
-        if (StepChecker.Instance.currStepID != infoPeca.ID)
+        if (infoPeca == null)
         {
-            Debug.Log($"Não está na hora de usar essa peça! Confira a etapa atual");
-            if (StepChecker.Instance != null) StepChecker.Instance.NotificarBloqueio($"Não está na hora de usar essa peça! Confira a etapa atual");
+            Debug.LogWarning("[CaixaPecasUI] Não é possível spawnar uma peça sem SOPieceData.", this);
+            StepChecker.Instance.NotificarBloqueio("Ainda não está na hora para essa peça, termine a etapa atual primeiramente.");
             return;
         }
-        if (infoPeca == null || infoPeca.prefab == null || infoPeca.prefab.Count == 0)
+
+        if (StepChecker.Instance != null
+            && !StepChecker.Instance.PodeSpawnarPeca(infoPeca.ID, out string motivoEtapa))
+        {
+            StepChecker.Instance.NotificarBloqueio(motivoEtapa);
+            return;
+        }
+
+        if (infoPeca.prefab == null || infoPeca.prefab.Count == 0)
         {
             Debug.LogWarning("[CaixaPecasUI] SOPieceData inválido ou sem prefabs cadastrados na lista!");
             return;
         }
 
-        // Pega o primeiro prefab da lista do ScriptableObject
-        GameObject prefabPeca = infoPeca.prefab[0];
-        if (prefabPeca == null)
+        List<GameObject> prefabsValidos = infoPeca.prefab.FindAll(prefab => prefab != null);
+        if (prefabsValidos.Count == 0)
         {
-            Debug.LogWarning("[CaixaPecasUI] O prefab na posição 0 da lista está nulo!");
+            Debug.LogWarning("[CaixaPecasUI] Nenhum prefab válido está cadastrado na lista da peça.");
             return;
         }
 
@@ -253,16 +262,126 @@ public class CaixaPecasUi : MonoBehaviour
             return;
         }
 
-        int pos = UnityEngine.Random.Range(0, LocaideSpawn.Count);
+        List<Transform> locaisLivres = ObterLocaisSpawnLivres();
+        if (locaisLivres.Count == 0)
+        {
+            const string mensagem = "Não há espaço livre na mesa para outra peça. Mova uma peça antes de tentar novamente.";
+            Debug.LogWarning($"[CaixaPecasUI] {mensagem}", this);
+            if (StepChecker.Instance != null) StepChecker.Instance.NotificarBloqueio(mensagem);
+            return;
+        }
 
-        // Instancia a peça na mesa
-        GameObject novaPeca = Instantiate(prefabPeca, LocaideSpawn[pos]);
-        RegistrarSpawn(infoPeca, novaPeca);
+        GameObject prefabPeca = prefabsValidos[UnityEngine.Random.Range(0, prefabsValidos.Count)];
+        Transform localSpawn = locaisLivres[UnityEngine.Random.Range(0, locaisLivres.Count)];
+        Vector3 posicaoDestino = localSpawn.position;
+        Quaternion rotacaoDestino = localSpawn.rotation;
+        Vector3 posicaoInicial = pontoPartidaVoo != null ? pontoPartidaVoo.position : posicaoDestino;
+        Quaternion rotacaoInicial = pontoPartidaVoo != null ? pontoPartidaVoo.rotation : rotacaoDestino;
+
+        GameObject novaPeca = Instantiate(prefabPeca, posicaoDestino, rotacaoDestino);
+        RegistrarSpawn(infoPeca, novaPeca, localSpawn, pontoPartidaVoo != null);
+
+        if (pontoPartidaVoo != null)
+        {
+            Collider[] colliders = novaPeca.GetComponentsInChildren<Collider>(true);
+            bool[] collidersAtivos = new bool[colliders.Length];
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                collidersAtivos[i] = colliders[i].enabled;
+                colliders[i].enabled = false;
+            }
+
+            novaPeca.transform.SetPositionAndRotation(posicaoInicial, rotacaoInicial);
+            CameraControllerMontagem.instance?.FollowSpawn(novaPeca.transform);
+            StartCoroutine(AnimarSpawn(novaPeca, localSpawn, posicaoInicial, rotacaoInicial, colliders, collidersAtivos));
+        }
+        else
+        {
+            Debug.LogWarning("[CaixaPecasUI] Ponto de partida do voo não configurado; a peça aparecerá diretamente na mesa.", this);
+            novaPeca.transform.SetPositionAndRotation(posicaoDestino, rotacaoDestino);
+            novaPeca.transform.SetParent(localSpawn, true);
+        }
 
         Debug.Log($"[CaixaPecasUI] Peça '{infoPeca.Nome}' spawnada com sucesso na mesa!");
 
         // Fecha a UI da caixa após selecionar a peça
         FecharCaixa();
+    }
+
+    private List<Transform> ObterLocaisSpawnLivres()
+    {
+        var locaisLivres = new List<Transform>();
+        if (LocaideSpawn == null) return locaisLivres;
+
+        var locaisUnicos = new HashSet<Transform>();
+        foreach (Transform local in LocaideSpawn)
+        {
+            if (local == null || !locaisUnicos.Add(local)) continue;
+
+            if (pecasNosLocaisSpawn.TryGetValue(local, out GameObject peca))
+            {
+                if (peca == null || (!pecasEmVoo.Contains(peca)
+                    && Vector3.Distance(peca.transform.position, local.position) > 0.25f))
+                {
+                    pecasNosLocaisSpawn.Remove(local);
+                }
+                else
+                {
+                    continue;
+                }
+            }
+
+            locaisLivres.Add(local);
+        }
+
+        return locaisLivres;
+    }
+
+    private IEnumerator AnimarSpawn(
+        GameObject peca,
+        Transform localSpawn,
+        Vector3 posicaoInicial,
+        Quaternion rotacaoInicial,
+        Collider[] colliders,
+        bool[] collidersAtivos)
+    {
+        Vector3 posicaoFinal = localSpawn.position;
+        float alturaApex = Mathf.Max(posicaoInicial.y, posicaoFinal.y) + alturaCurvaVoo;
+        Vector3 pontoControle1 = Vector3.Lerp(posicaoInicial, posicaoFinal, 0.25f);
+        Vector3 pontoControle2 = Vector3.Lerp(posicaoInicial, posicaoFinal, 0.75f);
+        pontoControle1.y = alturaApex;
+        pontoControle2.y = alturaApex;
+        float tempo = 0f;
+        float duracao = Mathf.Max(0.1f, duracaoVoo);
+
+        while (tempo < duracao && peca != null)
+        {
+            tempo += Time.deltaTime;
+            float t = Mathf.Clamp01(tempo / duracao);
+            float inverso = 1f - t;
+            peca.transform.position =
+                inverso * inverso * inverso * posicaoInicial
+                + 3f * inverso * inverso * t * pontoControle1
+                + 3f * inverso * t * t * pontoControle2
+                + t * t * t * posicaoFinal;
+            peca.transform.rotation = Quaternion.Slerp(rotacaoInicial, localSpawn.rotation, t);
+            yield return null;
+        }
+
+        if (peca != null)
+        {
+            peca.transform.SetPositionAndRotation(localSpawn.position, localSpawn.rotation);
+            peca.transform.SetParent(localSpawn, true);
+
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                if (colliders[i] != null) colliders[i].enabled = collidersAtivos[i];
+            }
+
+            CameraControllerMontagem.instance?.StopFollowingSpawn(peca.transform);
+        }
+
+        if (peca != null) pecasEmVoo.Remove(peca);
     }
 
     #endregion
@@ -332,7 +451,7 @@ public class CaixaPecasUi : MonoBehaviour
         return total;
     }
 
-    private void RegistrarSpawn(SOPieceData peca, GameObject instancia)
+    private void RegistrarSpawn(SOPieceData peca, GameObject instancia, Transform localSpawn, bool emVoo)
     {
         if (!pecasSpawnadas.TryGetValue(peca, out List<GameObject> lista))
         {
@@ -341,6 +460,8 @@ public class CaixaPecasUi : MonoBehaviour
         }
 
         lista.Add(instancia);
+        pecasNosLocaisSpawn[localSpawn] = instancia;
+        if (emVoo) pecasEmVoo.Add(instancia);
     }
     #endregion
 

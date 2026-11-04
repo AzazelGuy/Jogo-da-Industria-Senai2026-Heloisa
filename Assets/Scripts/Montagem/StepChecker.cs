@@ -302,6 +302,29 @@ public class StepChecker : MonoBehaviour
     }
 
     /// <summary>
+    /// Verifica se uma peça pode ser retirada da caixa. Peças da etapa atual ou de etapas
+    /// anteriores continuam disponíveis, permitindo instalar extras após atingir o mínimo.
+    /// </summary>
+    public bool PodeSpawnarPeca(string pieceID, out string motivo)
+    {
+        motivo = null;
+
+        if (!UsaEtapas || string.IsNullOrEmpty(pieceID) || etapaAtual >= etapas.Count)
+        {
+            return true;
+        }
+
+        int indice = IndiceDaEtapaDaPeca(pieceID);
+        if (indice < 0 || indice <= etapaAtual)
+        {
+            return true;
+        }
+
+        motivo = $"Ainda não é hora de pegar essa peça. Etapa atual: {NomeDaEtapa(etapaAtual)}.";
+        return false;
+    }
+
+    /// <summary>
     /// Avisa a UI/lógica de jogo que algo foi bloqueado por estar fora da sequência.
     /// </summary>
     public void NotificarBloqueio(string motivo)
@@ -552,6 +575,8 @@ public class StepChecker : MonoBehaviour
     #endregion
 
 
-    public string currStep => etapas[etapaAtual].nome;
-    public string currStepID => etapas[etapaAtual].pecas[0].pieceID;
+    public string currStep => EtapaAtual != null ? EtapaAtual.nome : "";
+    public string currStepID => EtapaAtual?.pecas != null && EtapaAtual.pecas.Count > 0
+        ? EtapaAtual.pecas[0].pieceID
+        : "";
 }

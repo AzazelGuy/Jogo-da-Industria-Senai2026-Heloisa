@@ -97,12 +97,13 @@ public class EncaixeBaseMontagem : MonoBehaviour
             Transform posAlvo = identifiyer.ScrewsPositions[i];
             if (posAlvo == null) continue;
 
-            GameObject objConector = Instantiate(ScrewPrefab);
-            objConector.transform.position = posAlvo.position + new Vector3(0f, 1.5f, 0f);
+            GameObject objConector = Instantiate(ScrewPrefab, posAlvo, false);
+            objConector.transform.localPosition = Vector3.up * 1.5f;
+            objConector.transform.localRotation = Quaternion.identity;
 
             if (objConector.TryGetComponent<ConnectorMontagem>(out var conector))
             {
-                conector.SetTarget(posAlvo.position, posAlvo.eulerAngles);
+                conector.SetTarget(posAlvo);
                 conector.SetPlacement(identifiyer, i);
             }
         }

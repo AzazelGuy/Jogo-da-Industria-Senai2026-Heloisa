@@ -49,7 +49,7 @@ MonoBehaviour:
   anim: {fileID: 0}
   InfoPeca: {fileID: 11400000, guid: 7e8d30ad86f16d34b9062f3e17df4fd4, type: 2}
   cur_state: 0
-  myModel: {fileID: 0}
+  myModel: {fileID: 1732980359100873590}
   LocaisEncaixe: []
   ParticlesPlace: {fileID: 1133285911889207144, guid: 6b1ad51cc55f27b42b451ab225da1de3, type: 3}
   pieceNameText: {fileID: 0}
@@ -137,6 +137,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cffe573dbfb1b731bae4944640f92341, type: 3}
+--- !u!33 &1732980359100873590 stripped
+MeshFilter:
+  m_CorrespondingSourceObject: {fileID: -5754084199372789682, guid: cffe573dbfb1b731bae4944640f92341, type: 3}
+  m_PrefabInstance: {fileID: 2894031823801537336}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &3432609198962160851 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: cffe573dbfb1b731bae4944640f92341, type: 3}

@@ -37,6 +37,7 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
     [Header("Transformações de Destino")]
     [SerializeField] private Vector3 posicaoDesejada;
     [SerializeField] private Vector3 rotacaoDesejadaEuler;
+    private Transform alvoTransform;
 
     #endregion
 
@@ -92,6 +93,7 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
     /// </summary>
     public void SetTarget(Vector3 posicao)
     {
+        alvoTransform = null;
         posicaoDesejada = posicao;
     }
 
@@ -100,8 +102,17 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
     /// </summary>
     public void SetTarget(Vector3 posicao, Vector3 rotacaoEuler)
     {
+        alvoTransform = null;
         posicaoDesejada = posicao;
         rotacaoDesejadaEuler = rotacaoEuler;
+    }
+
+    /// <summary>
+    /// Define um alvo móvel; a posição e a rotação são lidas diretamente do Transform.
+    /// </summary>
+    public void SetTarget(Transform alvo)
+    {
+        alvoTransform = alvo;
     }
 
     #endregion
@@ -157,13 +168,14 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
     /// </summary>
     private void ProcessarMovimentoLinear()
     {
+        Vector3 posicaoAlvo = alvoTransform != null ? alvoTransform.position : posicaoDesejada;
         transform.position = Vector3.MoveTowards(
             transform.position,
-            posicaoDesejada,
+            posicaoAlvo,
             velocidade * Time.deltaTime
         );
 
-        if (Vector3.Distance(transform.position, posicaoDesejada) <= limiteDeConclusao)
+        if (Vector3.Distance(transform.position, posicaoAlvo) <= limiteDeConclusao)
         {
             ConcluirConexao();
         }
@@ -174,14 +186,30 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
     /// </summary>
     private void ProcessarRotacao()
     {
-        Quaternion rotacaoAlvo = Quaternion.Euler(rotacaoDesejadaEuler);
+        if (alvoTransform != null)
+        {
+            Quaternion rotacaoAlvo = alvoTransform.rotation;
+            transform.rotation = Quaternion.RotateTowards(
+                transform.rotation,
+                rotacaoAlvo,
+                velocidade * 100f * Time.deltaTime
+            );
+
+            if (Quaternion.Angle(transform.rotation, rotacaoAlvo) <= limiteDeConclusao)
+            {
+                ConcluirConexao();
+            }
+            return;
+        }
+
+        Quaternion rotacaoDesejada = Quaternion.Euler(rotacaoDesejadaEuler);
         transform.localRotation = Quaternion.RotateTowards(
             transform.localRotation,
-            rotacaoAlvo,
+            rotacaoDesejada,
             velocidade * 100f * Time.deltaTime
         );
 
-        if (Quaternion.Angle(transform.localRotation, rotacaoAlvo) <= limiteDeConclusao)
+        if (Quaternion.Angle(transform.localRotation, rotacaoDesejada) <= limiteDeConclusao)
         {
             ConcluirConexao();
         }
@@ -217,11 +245,18 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
         // Ajusta posição/rotação final no encerramento
         if (tipoDeConexao == ConnectorType.LinearMove)
         {
-            transform.position = posicaoDesejada;
+            transform.position = alvoTransform != null ? alvoTransform.position : posicaoDesejada;
         }
         else if (tipoDeConexao == ConnectorType.Rotation)
         {
-            transform.localRotation = Quaternion.Euler(rotacaoDesejadaEuler);
+            if (alvoTransform != null)
+            {
+                transform.rotation = alvoTransform.rotation;
+            }
+            else
+            {
+                transform.localRotation = Quaternion.Euler(rotacaoDesejadaEuler);
+            }
         }
 
         // 1. Notifica o IdentifiyerEncaixe (se atribuído)

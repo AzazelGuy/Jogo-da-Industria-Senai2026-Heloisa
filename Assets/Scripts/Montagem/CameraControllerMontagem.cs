@@ -65,6 +65,17 @@ public class CameraControllerMontagem : MonoBehaviour
     [SerializeField, Tooltip("Curva de suavização da transição.")]
     private AnimationCurve curvaDeTransicao = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
+    [Header("Acompanhamento de Spawn")]
+    [SerializeField, Min(0.01f), Tooltip("Suavidade com que a câmera acompanha o movimento da peça.")]
+    private float velocidadeAcompanhamentoSpawn = 6f;
+
+    [Header("Passeio do Tutorial")]
+    [SerializeField, Min(0.1f)] private float duracaoVooTutorial = 2.5f;
+    [SerializeField, Min(0f)] private float velocidadeGiroTutorial = 8f;
+    [SerializeField, Min(0f)] private float alturaArcoTutorial = 1.5f;
+    [SerializeField, Tooltip("Objeto usado como centro do giro da câmera durante o tutorial.")]
+    private Transform centroRotacaoPasseioTutorial;
+
     #endregion
 
     #region Campos Serializados - Olhar com o Mouse
@@ -159,6 +170,15 @@ public class CameraControllerMontagem : MonoBehaviour
     private bool naEstacaoDireita;
     private bool retornandoParaVisaoGeral;
     private Coroutine rotinaDeTransicaoAtiva;
+    private Transform alvoSpawnSeguido;
+    private Vector3 posicaoAntesDoSpawn;
+    private Quaternion rotacaoAntesDoSpawn;
+    private float fovAntesDoSpawn;
+    private CameraState estadoAntesDoSpawn;
+    private bool estacaoDireitaAntesDoSpawn;
+    private bool seguindoSpawn;
+    private bool passeioTutorialAtivo;
+    private bool vooFinalTutorialAtivo;
 
     #endregion
 
@@ -205,9 +225,31 @@ public class CameraControllerMontagem : MonoBehaviour
     {
         if (MistakeEvent.IsFeedbackActive) return;
 
+        if (passeioTutorialAtivo)
+        {
+            if (vooFinalTutorialAtivo)
+            {
+                transform.SetPositionAndRotation(posicaoBase, rotacaoBase);
+            }
+            else if (centroRotacaoPasseioTutorial != null)
+            {
+                transform.SetPositionAndRotation(posicaoBase, rotacaoBase);
+                transform.RotateAround(
+                    centroRotacaoPasseioTutorial.position,
+                    Vector3.up,
+                    velocidadeGiroTutorial * Time.unscaledDeltaTime
+                );
+                posicaoBase = transform.position;
+                rotacaoBase = transform.rotation;
+            }
+            cameraAlvo.fieldOfView = fovBase;
+            return;
+        }
+
         // Ordem importa: primeiro decide os alvos, depois suaviza, por fim aplica no transform.
         AtualizarAlvosDeOlhar();
         AtualizarPoseBaseNaVisaoGeral();
+        AtualizarPoseBaseSeguindoSpawn();
         AtualizarCamadas();
         AplicarPoseFinal();
     }
@@ -229,6 +271,11 @@ public class CameraControllerMontagem : MonoBehaviour
     /// </summary>
     public void SaveInitialTransform()
     {
+        alvoSpawnSeguido = null;
+        seguindoSpawn = false;
+        passeioTutorialAtivo = false;
+        vooFinalTutorialAtivo = false;
+
         // Se já estamos rodando, usa a pose BASE (sem bob/pan) para não gravar um offset por engano.
         posicaoInicial = inicializado ? posicaoBase : transform.position;
         rotacaoInicial = inicializado ? rotacaoBase : transform.rotation;
@@ -252,6 +299,72 @@ public class CameraControllerMontagem : MonoBehaviour
         inicializado = true;
     }
 
+    public void StartTutorialTour()
+    {
+        if (centroRotacaoPasseioTutorial == null)
+        {
+            Debug.LogError("[CameraControllerMontagem] Atribua o centro de rotação do passeio do tutorial no Inspector.", this);
+            return;
+        }
+
+        passeioTutorialAtivo = true;
+        vooFinalTutorialAtivo = false;
+        alvoSpawnSeguido = null;
+        seguindoSpawn = false;
+        retornandoParaVisaoGeral = false;
+
+        posicaoBase = transform.position;
+        rotacaoBase = transform.rotation;
+        pitchAtual = 0f;
+        yawAtual = 0f;
+        pitchAlvo = 0f;
+        yawAlvo = 0f;
+        offsetPanLocal = Vector3.zero;
+        pesoBalanco = 0f;
+        estadoAtual = CameraState.Moving;
+    }
+
+    public IEnumerator FinishTutorialTour()
+    {
+        if (!passeioTutorialAtivo) yield break;
+
+        Pose poseMesa = ObterPoseDaEstacao(false);
+        Vector3 posicaoInicio = transform.position;
+        Quaternion rotacaoInicio = transform.rotation;
+        Vector3 posicaoAlvo = poseMesa.position;
+        Quaternion rotacaoAlvo = poseMesa.rotation;
+        Vector3 pontoControle1 = Vector3.Lerp(posicaoInicio, posicaoAlvo, 0.25f)
+            + Vector3.up * alturaArcoTutorial;
+        Vector3 pontoControle2 = Vector3.Lerp(posicaoInicio, posicaoAlvo, 0.75f)
+            + Vector3.up * alturaArcoTutorial;
+        float tempo = 0f;
+        float duracao = Mathf.Max(0.1f, duracaoVooTutorial);
+
+        vooFinalTutorialAtivo = true;
+        while (tempo < duracao)
+        {
+            tempo += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(tempo / duracao);
+            float suavizado = t * t * (3f - 2f * t);
+            float inverso = 1f - suavizado;
+
+            posicaoBase =
+                inverso * inverso * inverso * posicaoInicio
+                + 3f * inverso * inverso * suavizado * pontoControle1
+                + 3f * inverso * suavizado * suavizado * pontoControle2
+                + suavizado * suavizado * suavizado * posicaoAlvo;
+            rotacaoBase = Quaternion.Slerp(rotacaoInicio, rotacaoAlvo, suavizado);
+            yield return null;
+        }
+
+        posicaoBase = posicaoAlvo;
+        rotacaoBase = rotacaoAlvo;
+        naEstacaoDireita = false;
+        passeioTutorialAtivo = false;
+        vooFinalTutorialAtivo = false;
+        estadoAtual = CameraState.Overview;
+    }
+
     /// <summary>
     /// Move a câmera suavemente até o ponto de foco informado.
     /// </summary>
@@ -259,6 +372,8 @@ public class CameraControllerMontagem : MonoBehaviour
     {
         if (pontoDeFoco == null) return;
 
+        alvoSpawnSeguido = null;
+        seguindoSpawn = false;
         retornandoParaVisaoGeral = false;
 
         IniciarTransicao(
@@ -277,6 +392,9 @@ public class CameraControllerMontagem : MonoBehaviour
     /// </summary>
     public void ReturnToOverview()
     {
+        alvoSpawnSeguido = null;
+        seguindoSpawn = false;
+
         // Já está na visão geral, ou já está voltando: não faz nada
         if (estadoAtual == CameraState.Overview) return;
         if (estadoAtual == CameraState.Moving && retornandoParaVisaoGeral) return;
@@ -290,6 +408,89 @@ public class CameraControllerMontagem : MonoBehaviour
             estadoAtual = CameraState.Overview;
             OnReturnToOverview?.Invoke();
         });
+    }
+
+    /// <summary>
+    /// Vira a câmera para acompanhar temporariamente uma peça em voo, sem mudar sua posição.
+    /// StopFollowingSpawn restaura a orientação anterior depois que a peça aterrissar.
+    /// </summary>
+    public void FollowSpawn(Transform alvo)
+    {
+        if (alvo == null) return;
+
+        if (!seguindoSpawn)
+        {
+            posicaoAntesDoSpawn = posicaoBase;
+            rotacaoAntesDoSpawn = rotacaoBase;
+            fovAntesDoSpawn = fovBase;
+            estadoAntesDoSpawn = estadoAtual == CameraState.Focused
+                ? CameraState.Focused
+                : CameraState.Overview;
+            estacaoDireitaAntesDoSpawn = naEstacaoDireita;
+            seguindoSpawn = true;
+        }
+
+        alvoSpawnSeguido = alvo;
+        retornandoParaVisaoGeral = false;
+        if (rotinaDeTransicaoAtiva != null)
+        {
+            StopCoroutine(rotinaDeTransicaoAtiva);
+            rotinaDeTransicaoAtiva = null;
+        }
+
+        estadoAtual = CameraState.Focused;
+    }
+
+    /// <summary>
+    /// Para de acompanhar a peça e restaura a pose e o estado de câmera anteriores.
+    /// </summary>
+    public void StopFollowingSpawn(Transform alvo)
+    {
+        if (!seguindoSpawn || alvo != alvoSpawnSeguido) return;
+
+        RestaurarDepoisDoSpawn();
+    }
+
+    private void RestaurarDepoisDoSpawn()
+    {
+        if (!seguindoSpawn) return;
+
+        seguindoSpawn = false;
+        alvoSpawnSeguido = null;
+        retornandoParaVisaoGeral = false;
+        IniciarTransicao(posicaoAntesDoSpawn, rotacaoAntesDoSpawn, fovAntesDoSpawn, () =>
+        {
+            naEstacaoDireita = estacaoDireitaAntesDoSpawn;
+            estadoAtual = estadoAntesDoSpawn;
+        });
+    }
+
+    #endregion
+
+    #region Acompanhamento de Spawn
+
+    private void AtualizarPoseBaseSeguindoSpawn()
+    {
+        if (alvoSpawnSeguido == null)
+        {
+            if (seguindoSpawn) RestaurarDepoisDoSpawn();
+            return;
+        }
+
+        if (estadoAtual != CameraState.Focused || rotinaDeTransicaoAtiva != null) return;
+
+        Quaternion rotacaoAlvo = ObterRotacaoCameraSpawn(alvoSpawnSeguido, posicaoBase);
+        float suavizacao = SuavizacaoExp(velocidadeAcompanhamentoSpawn);
+
+        rotacaoBase = Quaternion.Slerp(rotacaoBase, rotacaoAlvo, suavizacao);
+    }
+
+    private Quaternion ObterRotacaoCameraSpawn(Transform alvo, Vector3 posicaoCamera)
+    {
+        Vector3 direcao = alvo.position - posicaoCamera;
+        return direcao.sqrMagnitude > 0.001f
+            ? Quaternion.LookRotation(direcao, Vector3.up)
+            : rotacaoBase;
     }
 
     #endregion
