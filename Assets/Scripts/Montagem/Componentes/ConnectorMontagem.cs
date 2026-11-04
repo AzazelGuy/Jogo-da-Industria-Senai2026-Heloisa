@@ -57,6 +57,9 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
     [SerializeField] private int indiceDoConector;
 
     [SerializeField] private AudioClip SFXPlaced;
+    [SerializeField] private AudioClip SFXPlacing;
+
+    private int ultimoFrameHold = -10;
 
     #endregion
 
@@ -67,7 +70,35 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
     #endregion
 
     #region Configuração Externa (Setters)
+    
+    private bool somLigado;
 
+    private void Update()
+    {
+        // OnHold parou de ser chamado (soltou o clique) -> corta o som
+        if (somLigado && Time.frameCount - ultimoFrameHold > 1)
+            PararSomParafusando();
+    }
+
+    private void OnDisable() => PararSomParafusando();
+
+    private void TocarSomParafusando()
+    {
+        if (SFXPlacing == null || AudioManager.Instance == null) return;
+
+        ultimoFrameHold = Time.frameCount;
+        somLigado = true;
+        AudioManager.Instance.PlayLoopSFX(SFXPlacing);
+    }
+
+    private void PararSomParafusando()
+    {
+        if (!somLigado) return;
+
+        somLigado = false;
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.StopLoopSFX(SFXPlacing);
+    }
     /// <summary>
     /// Define o encaixe de destino (via IdentifiyerEncaixe) e o índice do conector nesse encaixe.
     /// </summary>
@@ -128,6 +159,8 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
         if (estaConectado) return;
         if (!IsScrewdriverSelected()) return;
 
+        if (tipoDeConexao == ConnectorType.LinearMove || tipoDeConexao == ConnectorType.Rotation)
+            TocarSomParafusando();
         switch (tipoDeConexao)
         {
             case ConnectorType.LinearMove:
@@ -240,6 +273,7 @@ public class ConnectorMontagem : MonoBehaviour, ISelectable
         if (estaConectado) return;
 
         estaConectado = true;
+        PararSomParafusando();
         AudioManager.Instance.PlaySFX(SFXPlaced);
 
         // Ajusta posição/rotação final no encerramento

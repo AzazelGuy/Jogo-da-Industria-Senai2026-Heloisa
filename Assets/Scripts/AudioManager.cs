@@ -12,6 +12,7 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioSource musicSource;
     [SerializeField] private AudioSource sfxSource;
     [SerializeField] private AudioSource voiceSource;
+    [SerializeField] private AudioSource sfxLoopSource;
 
     // ─── Volumes (0-1) ───────────────────────────────────────────
     [Header("Volumes iniciais")]
@@ -73,6 +74,7 @@ public class AudioManager : MonoBehaviour
         if (musicSource == null) musicSource = CreateSource("MusicSource", true);
         if (sfxSource == null) sfxSource = CreateSource("SFXSource", false);
         if (voiceSource == null) voiceSource = CreateSource("VoiceSource", false);
+        if (sfxLoopSource == null) sfxLoopSource = CreateSource("SFXLoopSource", true);
 
         // Aplica volumes iniciais
         musicSource.volume = musicVolume;
@@ -215,6 +217,22 @@ public class AudioManager : MonoBehaviour
         sfxSource.PlayOneShot(clip, volume * sfxVolume);
     }
 
+    /// <summary>Toca um SFX em loop (ex: parafusando). Chamar de novo com o mesmo clip não reinicia.</summary>
+    public void PlayLoopSFX(AudioClip clip)
+    {
+        if (clip == null || sfxMuted) return;
+
+        if (sfxLoopSource.clip != clip) sfxLoopSource.clip = clip;
+        sfxLoopSource.volume = sfxVolume;
+        if (!sfxLoopSource.isPlaying) sfxLoopSource.Play();
+    }
+
+    public void StopLoopSFX(AudioClip clip)
+    {
+        if (sfxLoopSource.clip == clip && sfxLoopSource.isPlaying)
+            sfxLoopSource.Stop();
+    }
+
     /// <summary>Toca um SFX com pitch aleatório dentro de um range (útil para variação).</summary>
     public void PlaySFXRandomPitch(AudioClip clip, float minPitch = 0.9f, float maxPitch = 1.1f)
     {
@@ -227,6 +245,7 @@ public class AudioManager : MonoBehaviour
         if (clips == null || clips.Length == 0) return;
         PlaySFX(clips[Random.Range(0, clips.Length)]);
     }
+    public bool SFXMuted => sfxMuted;
 
     #endregion
 
@@ -318,8 +337,8 @@ public class AudioManager : MonoBehaviour
     #endregion
 
     // ─────────────────────────────────────────────
-    // Controle de Volume (Incremento)
-    #region
+    #region// Controle de Volume (Incremento)
+
     // Música
     public void IncreaseMusicVolume()
     {

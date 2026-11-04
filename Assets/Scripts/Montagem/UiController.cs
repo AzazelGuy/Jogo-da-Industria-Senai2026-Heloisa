@@ -2,6 +2,7 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 /// <summary>
 /// Controlador central da UI do jogo: exibe a tela de vitória ao concluir a montagem,
@@ -35,6 +36,12 @@ public class UiController : MonoBehaviour
     [SerializeField] string[] nomeHotbarItens;
     [SerializeField] TextMeshProUGUI nomedoItemDisplay;
     private int posItemAtual;
+
+    [Header("Cursores")]
+    [Tooltip("Cursor usado quando o slot selecionado não tem cursor próprio (ex: Mão).")]
+    [SerializeField] private Image cursorPadrao;
+    [Tooltip("Mesma ordem/tamanho da hotbar. Deixe vazio (None) nos slots que usam o cursor padrão.")]
+    [SerializeField] private Image[] cursoresHotbarItens;
 
     [Header("---Caixa de Peças---")]
     [Tooltip("Se vazio, usa a CaixaPecasUi que existir na cena.")]
@@ -255,6 +262,35 @@ public class UiController : MonoBehaviour
         {
             nomedoItemDisplay.text = FerramentaSelecionadaAtual;
         }
+
+        AtualizarCursor();
+    }
+
+    /// <summary>
+    /// Liga só o cursor do item selecionado; se o slot não tiver cursor próprio, usa o padrão.
+    /// </summary>
+    private void AtualizarCursor()
+    {
+        Image alvo = null;
+
+        if (cursoresHotbarItens != null && posItemAtual >= 0 && posItemAtual < cursoresHotbarItens.Length)
+        {
+            alvo = cursoresHotbarItens[posItemAtual];
+        }
+
+        if (alvo == null) alvo = cursorPadrao;
+
+        if (cursorPadrao != null) cursorPadrao.enabled = false;
+
+        if (cursoresHotbarItens != null)
+        {
+            foreach (Image img in cursoresHotbarItens)
+            {
+                if (img != null) img.enabled = false;
+            }
+        }
+
+        if (alvo != null) alvo.enabled = true;
     }
 
     #endregion
