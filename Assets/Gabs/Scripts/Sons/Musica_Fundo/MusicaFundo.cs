@@ -37,26 +37,10 @@ public class MusicaFundo : MonoBehaviour
                 return;
             }
         }
-
-        // Configura o AudioSource automaticamente
-        audioSource = GetComponent<AudioSource>();
-        if (audioSource == null)
-        {
-            audioSource = gameObject.AddComponent<AudioSource>();
-        }
-
-        audioSource.clip = musicaFundo;
-        audioSource.volume = volumeMusica;
-
-        // Garante que a musica vai repetir em loop por codigo
-        audioSource.loop = true;
     }
 
     private void Start()
     {
-        if (audioSource != null && !audioSource.isPlaying && musicaFundo != null)
-        {
-            audioSource.Play();
-        }
+        AudioManager.Instance.PlayMusic(musicaFundo);
     }
 }

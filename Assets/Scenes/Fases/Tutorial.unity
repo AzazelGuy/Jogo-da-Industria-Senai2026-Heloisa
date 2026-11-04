@@ -1481,8 +1481,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -864, y: 451}
-  m_SizeDelta: {x: 410.48, y: 220.96}
+  m_AnchoredPosition: {x: -879, y: 472}
+  m_SizeDelta: {x: 120.3305, y: 104.3106}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &411847200
 MonoBehaviour:
@@ -1749,7 +1749,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 416893253}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 680309839}
+        m_TargetAssemblyTypeName: GerenciadorTutorial, Assembly-CSharp
+        m_MethodName: AvancarPasso
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &416893253
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2465,7 +2477,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 680309838}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b4c5791d52f14c1393093052e2c7b131, type: 3}
+  m_Script: {fileID: 11500000, guid: 55d910b4863d51546b99a2774f725e93, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   painelPasso0: {fileID: 986152580}
@@ -2480,6 +2492,9 @@ MonoBehaviour:
   - {fileID: 1389360715}
   - {fileID: 248297821}
   duracaoFadeFala: 0.3
+  containerHudDefeito: {fileID: 781220205}
+  containerHudPrincipal: {fileID: 2138557765}
+  duracaoFadeHud: 0.4
   botaoProximoPasso: {fileID: 416893251}
 --- !u!4 &680309840
 Transform:
@@ -2980,8 +2995,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -867, y: 452}
-  m_SizeDelta: {x: 410.4759, y: 220.9581}
+  m_AnchoredPosition: {x: -879.8794, y: 472.47217}
+  m_SizeDelta: {x: 120.3293, y: 104.3097}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &783984521
 MonoBehaviour:
@@ -6292,7 +6307,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   musicaFundo: {fileID: 8300000, guid: 0a5211b387483594a866a0b0b87ad473, type: 3}
   volumeMusica: 0.5
-  persistirEntreCenas: 1
+  persistirEntreCenas: 0
 --- !u!4 &1681596211
 Transform:
   m_ObjectHideFlags: 0
@@ -6543,17 +6558,21 @@ MonoBehaviour:
   m_GameObject: {fileID: 1784376343}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a5881cf7fc6109142baf9cecebb3ce00, type: 3}
+  m_Script: {fileID: 11500000, guid: 05eb013c7acac414eb1cc8ded0537aa9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  estacaoPrincipal: {fileID: 1885203415}
-  estacaoDireita: {fileID: 2058575022}
-  duracaoDaTransicao: 0.8
-  velocidadeAcompanhamentoSpawn: 6
-  duracaoVooTutorial: 2.5
-  velocidadeGiroTutorial: 8
-  alturaArcoTutorial: 1.5
-  centroRotacaoPasseioTutorial: {fileID: 0}
+  position1: {fileID: 1885203415}
+  position2: {fileID: 2058575022}
+  edgeThreshold: 0.03
+  leftLookAngle: 15
+  verticalThreshold: 0.03
+  lookUpAngle: 12
+  lookDownAngle: 12
+  positionSpeed: 10
+  rotationSpeed: 3
+  bobAmount: 0.03
+  bobSpeed: 0.8
+  swayAmount: 1
 --- !u!81 &1784376346
 AudioListener:
   m_ObjectHideFlags: 0
