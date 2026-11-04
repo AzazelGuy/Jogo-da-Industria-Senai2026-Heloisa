@@ -120,7 +120,7 @@ public class DialogueControler : MonoBehaviour
         if (IsActive)
         {
             if (isClosingMistakeDialogue) return;
-            if (!Input.GetKeyDown(confirmKey)) return;
+            if (!Input.anyKeyDown) return;
 
             if (isTyping) FinishTyping();
             else NextPage();
@@ -148,7 +148,7 @@ public class DialogueControler : MonoBehaviour
         currentDialogueIsMistake = true;
         if (dialogueCanvasGroup != null) dialogueCanvasGroup.alpha = 0f;
         StepChecker.SetMistakeFeedbackActive(true);
-        StartDialogue(new[] { new DialoguePage { text = $"{message}\n\nAperte {confirmKey} para continuar." } });
+        StartDialogue(new[] { new DialoguePage { text = $"{message}\n\nAperte qualquer tecla para continuar." } });
     }
 
     private void CreateDefaultDialogueUIIfNeeded()
